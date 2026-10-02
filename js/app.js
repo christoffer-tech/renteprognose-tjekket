@@ -80,6 +80,7 @@
     biasEl.textContent = fmtSigned(o.bias);
     biasEl.className = "stat-value " + (o.bias > 0 ? "pos" : "neg");
     document.getElementById("stat-opt").textContent = fmtShare(o.opt_share);
+    document.getElementById("stat-pess").textContent = fmtShare(o.pess_share);
     document.getElementById("stat-n").textContent = o.n;
     document.getElementById("stat-period").textContent =
       "prognoser fra " + fmtDate(parseDate(d.meta.first_pub)) + " til " +
@@ -372,7 +373,7 @@
       var biasCls = m.bias === null || m.bias === undefined ? "" :
                     (m.bias > 0 ? "bias-pos" : m.bias < 0 ? "bias-neg" : "");
       tr.innerHTML =
-        "<td></td><td></td><td></td><td></td><td></td>";
+        "<td></td><td></td><td></td><td></td><td></td><td></td>";
       var cells = tr.querySelectorAll("td");
       cells[0].textContent = d.labels[p];
       cells[1].textContent = m.n || "–";
@@ -380,6 +381,7 @@
       cells[2].className = biasCls;
       cells[3].textContent = m.mae === null || m.mae === undefined ? "–" : fmtPct(m.mae).replace(" %", "");
       cells[4].textContent = fmtShare(m.opt_share);
+      cells[5].textContent = fmtShare(m.pess_share);
       tb.appendChild(tr);
     });
     document.getElementById("score-note").textContent =
@@ -593,7 +595,7 @@
     cell.ranking.forEach(function (b, i) {
       var m = cell.banks[b];
       var r = document.createElement("tr");
-      r.innerHTML = "<td></td><td></td><td></td><td></td><td></td><td></td>";
+      r.innerHTML = "<td></td><td></td><td></td><td></td><td></td><td></td><td></td>";
       var tds = r.querySelectorAll("td");
       tds[0].textContent = (i + 1) + ".";
       tds[1].textContent = cmp.banks[b].label;
@@ -602,6 +604,7 @@
       tds[4].textContent = fmtSigned(m.bias);
       tds[4].className = m.bias > 0 ? "bias-pos" : m.bias < 0 ? "bias-neg" : "";
       tds[5].textContent = fmtShare(m.opt_share);
+      tds[6].textContent = fmtShare(m.pess_share);
       tb.appendChild(r);
     });
   }

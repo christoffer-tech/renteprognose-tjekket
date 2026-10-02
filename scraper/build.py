@@ -113,13 +113,14 @@ def horizon_bucket(pub: str, target: str) -> str:
 def summarize(errors: list[float], hits: list[bool] | None = None) -> dict:
     n = len(errors)
     out: dict = {"n": n, "bias": None, "mae": None, "rmse": None,
-                 "opt_share": None, "hit_rate": None}
+                 "opt_share": None, "pess_share": None, "hit_rate": None}
     if n == 0:
         return out
     out["bias"] = round(sum(errors) / n, 3)
     out["mae"] = round(sum(abs(e) for e in errors) / n, 3)
     out["rmse"] = round((sum(e * e for e in errors) / n) ** 0.5, 3)
     out["opt_share"] = round(sum(1 for e in errors if e > 0) / n, 3)
+    out["pess_share"] = round(sum(1 for e in errors if e < 0) / n, 3)
     if hits:
         out["hit_rate"] = round(sum(1 for h in hits if h) / len(hits), 3)
         out["hit_n"] = len(hits)

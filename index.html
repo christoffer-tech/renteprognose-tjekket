@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Renteprognose-tjekket – Hvor præcise er Nykredits renteprognoser?</title>
 <meta name="description" content="Uafhængig tracking af Nykredits renteprognoser: sammenligner hver prognose med det faktiske renteniveau og visualiserer træfsikkerheden.">
-<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/style.css?v=3">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-<script src="js/app.js?v=2" defer></script>
+<script src="js/app.js?v=3" defer></script>
 </head>
 <body>
 
@@ -44,8 +44,13 @@
         </div>
         <div class="stat">
           <div class="stat-value" id="stat-opt">–</div>
-          <div class="stat-label">Andel af prognoser der var for optimistiske</div>
+          <div class="stat-label">Andel for optimistiske</div>
           <div class="stat-sub">dvs. den spåede rente lå under facit</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-pess">–</div>
+          <div class="stat-label">Andel for pessimistiske</div>
+          <div class="stat-sub">dvs. den spåede rente lå over facit</div>
         </div>
         <div class="stat">
           <div class="stat-value" id="stat-n">–</div>
@@ -59,7 +64,7 @@
         </div>
       </div>
       <div class="meter-block">
-        <div class="meter-title">Optimisme-meteret <span class="meter-hint">– hvor ligger den gennemsnitlige fejl?</span></div>
+        <div class="meter-title">Bias-meteret <span class="meter-hint">– hælder fejlene til den optimistiske eller pessimistiske side?</span></div>
         <div class="meter">
           <div class="meter-zone left"><span>For pessimistiske</span></div>
           <div class="meter-zone right"><span>For optimistiske</span></div>
@@ -126,8 +131,9 @@
     <div class="wrap">
       <h2>Scoreboard: <span id="bank-name-score">Nykredit</span></h2>
       <p class="section-intro">
-        Gennemsnitlig fejl (bias), middel absolut fejl (MAE) og andelen af for optimistiske
-        prognoser – pr. lånetype og pr. horisont. Alt i procentpoint.
+        Gennemsnitlig fejl (bias), middel absolut fejl (MAE) og andelen af for
+        optimistiske hhv. pessimistiske prognoser – pr. lånetype og pr. horisont.
+        Alt i procentpoint.
       </p>
       <label class="horizon-label">Horisont:
         <select id="horizon-select">
@@ -142,7 +148,7 @@
         <table id="score-table">
           <thead>
             <tr><th>Lånetype</th><th>Antal</th><th>Gns. fejl (bias)</th>
-                <th>Middel absolut fejl</th><th>Andel for optimistiske</th></tr>
+                <th>Middel absolut fejl</th><th>Andel for optimistiske</th><th>Andel for pessimistiske</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -206,7 +212,7 @@
           <table id="cell-table">
             <thead>
               <tr><th>#</th><th>Bank</th><th>Antal</th><th>MAE</th><th>Bias</th>
-                  <th>Andel for optimistiske</th></tr>
+                  <th>Andel for optimistiske</th><th>Andel for pessimistiske</th></tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -245,12 +251,14 @@
         – fx er F1/F3/F5 kontantlånsrenter inkl. kursfradrag, og F-kort er CITA6 plus
         rentetillæg. Til gengæld er facit månedsøjebliksbilleder, ikke dagskurser.
       </p>
-      <h3>Hvad betyder "for optimistisk"?</h3>
+      <h3>Hvad betyder "for optimistisk" og "for pessimistisk"?</h3>
       <p>
         Set fra låntagers synspunkt er en lav rente god. En prognose kaldes her
         <em>for optimistisk</em>, når den spåede rente lå <strong>under</strong> det
-        faktiske niveau (positiv fejl = facit − prognose). Renterne er afrundet til
-        én decimal, præcis som Nykredit selv afrunder dem.
+        faktiske niveau (positiv fejl = facit − prognose) – og <em>for
+        pessimistisk</em>, når den spåede rente lå <strong>over</strong> det faktiske
+        niveau (negativ fejl). Begge dele er fejlskud; siden viser begge sider lige meget.
+        Renterne er afrundet til én decimal, præcis som bankerne selv afrunder dem.
       </p>
       <h3>Forbehold</h3>
       <ul>

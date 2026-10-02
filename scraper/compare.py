@@ -87,12 +87,14 @@ def load(bank: str) -> dict:
 def summarize(errors: list[float]) -> dict:
     n = len(errors)
     if n == 0:
-        return {"n": 0, "bias": None, "mae": None, "rmse": None, "opt_share": None}
+        return {"n": 0, "bias": None, "mae": None, "rmse": None,
+                "opt_share": None, "pess_share": None}
     return {"n": n,
             "bias": round(sum(errors) / n, 3),
             "mae": round(sum(abs(e) for e in errors) / n, 3),
             "rmse": round((sum(e * e for e in errors) / n) ** 0.5, 3),
-            "opt_share": round(sum(1 for e in errors if e > 0) / n, 3)}
+            "opt_share": round(sum(1 for e in errors if e > 0) / n, 3),
+            "pess_share": round(sum(1 for e in errors if e < 0) / n, 3)}
 
 
 def main() -> None:
