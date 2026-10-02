@@ -1,0 +1,137 @@
+{
+ "bank": "nordea",
+ "source": "wayback",
+ "capture": "20250601180748",
+ "obs_date": "2025-05-22",
+ "pub_date": "2025-05-22",
+ "recalc_date": null,
+ "targets": [
+  "2025-08-22",
+  "2025-12-31",
+  "2026-06-30",
+  "2026-12-31"
+ ],
+ "rows": {
+  "fast30": {
+   "name": "Obligationslån 4 pct. – effektiv rente",
+   "aktuelt": 4.13,
+   "forecasts": [
+    4.17,
+    4.22,
+    4.27,
+    4.33
+   ]
+  },
+  "f1": {
+   "name": "Rentetilpasningslån F1 2",
+   "aktuelt": 2.16,
+   "forecasts": [
+    2.11,
+    2.13,
+    2.13,
+    2.15
+   ]
+  },
+  "f3": {
+   "name": "Rentetilpasningslån F3 2",
+   "aktuelt": 2.2,
+   "forecasts": [
+    2.27,
+    2.31,
+    2.34,
+    2.41
+   ]
+  },
+  "f5": {
+   "name": "Rentetilpasningslån F5 2",
+   "aktuelt": 2.47,
+   "forecasts": [
+    2.63,
+    2.64,
+    2.73,
+    2.83
+   ]
+  },
+  "cita6": {
+   "name": "Kort Rente Lån - CITA6 3",
+   "aktuelt": 1.73,
+   "forecasts": [
+    1.6,
+    1.6,
+    1.6,
+    1.6
+   ]
+  },
+  "cibor3": {
+   "name": "Nordea Bolig Puls - CIBOR3 4",
+   "aktuelt": 2.03,
+   "forecasts": [
+    1.9,
+    1.9,
+    1.9,
+    1.9
+   ]
+  },
+  "cibor6": {
+   "name": "Erhverv - CIBOR6 4",
+   "aktuelt": 2.14,
+   "forecasts": [
+    2.01,
+    2.01,
+    2.01,
+    2.01
+   ]
+  }
+ },
+ "raw_rows": {
+  "Obligationslån 4 pct. – effektiv rente": [
+   4.13,
+   4.17,
+   4.22,
+   4.27,
+   4.33
+  ],
+  "Rentetilpasningslån F1 2": [
+   2.16,
+   2.11,
+   2.13,
+   2.13,
+   2.15
+  ],
+  "Rentetilpasningslån F3 2": [
+   2.2,
+   2.27,
+   2.31,
+   2.34,
+   2.41
+  ],
+  "Rentetilpasningslån F5 2": [
+   2.47,
+   2.63,
+   2.64,
+   2.73,
+   2.83
+  ],
+  "Kort Rente Lån - CITA6 3": [
+   1.73,
+   1.6,
+   1.6,
+   1.6,
+   1.6
+  ],
+  "Nordea Bolig Puls - CIBOR3 4": [
+   2.03,
+   1.9,
+   1.9,
+   1.9,
+   1.9
+  ],
+  "Erhverv - CIBOR6 4": [
+   2.14,
+   2.01,
+   2.01,
+   2.01,
+   2.01
+  ]
+ }
+}

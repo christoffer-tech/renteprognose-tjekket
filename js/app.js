@@ -387,14 +387,25 @@
       "altså for optimistiske prognoser. Negativ (grøn) = for pessimistiske.";
   }
 
-  /* ---------- CSV-download ---------- */
-  function downloadCSV(d) {
-    var rows = [["produkt", "prognosedato", "maldato", "horisont",
-                 "prognose_pct", "facit_pct", "facit_dato", "fejl_pp"]];
+  /* ---------- CSV-download (alle banker) ---------- */
+  function downloadCSV() {
+    var rows = [["bank", "produkt", "prognosedato", "maldato", "horisont",
+                 "prognose_pct", "prognose_min", "prognose_maks",
+                 "facit_pct", "facit_dato", "fejl_pp", "ramt_interval"]];
     function num(v) { return v === null || v === undefined ? "" : String(v).replace(".", ","); }
-    d.points.forEach(function (pt) {
-      rows.push([d.labels[pt.p], pt.pub, pt.target, pt.h, num(pt.fc),
-                 num(pt.act), pt.act_date || "", num(pt.err)]);
+    var bankName = { nykredit: "Nykredit", nordea: "Nordea", sydbank: "Sydbank",
+                     jyske: "Jyske Bank", rd: "Realkredit Danmark" };
+    var all = state.cmp.bankData && Object.keys(state.cmp.bankData).length
+      ? state.cmp.bankData : { nykredit: state.data };
+    Object.keys(all).forEach(function (b) {
+      var d = all[b];
+      if (!d) return;
+      d.points.forEach(function (pt) {
+        rows.push([bankName[b] || b, d.labels[pt.p], pt.pub, pt.target, pt.h,
+                   num(pt.fc), num(pt.fc_lo), num(pt.fc_hi),
+                   num(pt.act), pt.act_date || "", num(pt.err),
+                   pt.hit === null || pt.hit === undefined ? "" : (pt.hit ? "ja" : "nej")]);
+      });
     });
     var csv = rows.map(function (r) { return r.join(";"); }).join("\r\n");
     var blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
@@ -407,6 +418,273 @@
       URL.revokeObjectURL(a.href);
       a.remove();
     }, 500);
+  }
+
+  /* ---------- bank-sammenligning ---------- */
+  state.cmp = { comparison: null, bankData: {}, product: "F5", horizon: "3M" };
+
+  function bankPath(b) {
+    return b === "nykredit" ? "data/dataset.json" : "data/banks/" + b + "/dataset.json";
+  }
+
+  function cmpPoints(bank, canon, h) {
+    var d = state.cmp.bankData[bank];
+    var cmp = state.cmp.comparison;
+    if (!d || !cmp) return [];
+    var prods = [];
+    Object.keys(cmp.mapping[bank] || {}).forEach(function (bp) {
+      if (cmp.mapping[bank][bp] === canon) prods.push(bp);
+    });
+    return d.points.filter(function (pt) {
+      return prods.indexOf(pt.p) !== -1 && pt.h === h && pt.err !== null;
+    });
+  }
+
+  function renderChamp() {
+    var cmp = state.cmp.comparison;
+    var tb = document.querySelector("#champ-table tbody");
+    tb.innerHTML = "";
+    cmp.championship.forEach(function (c, i) {
+      var b = c.bank;
+      var bias = cmp.bias_table[b] || {};
+      var tr = document.createElement("tr");
+      var period = bias.period && bias.period[0]
+        ? fmtDate(parseDate(bias.period[0])) + " – " + fmtDate(parseDate(bias.period[1])) : "–";
+      var bHtml = (i === 0 ? "<span class='champ-winner'>" : "<span>") +
+        cmp.banks[b].label + "</span>";
+      tr.innerHTML = "<td></td><td></td><td></td><td></td><td></td><td></td><td></td>";
+      var tds = tr.querySelectorAll("td");
+      tds[0].textContent = (i + 1) + ".";
+      tds[1].innerHTML = bHtml;
+      tds[2].textContent = String(c.mean_rank).replace(".", ",");
+      tds[3].textContent = c.cells;
+      tds[4].textContent = c.wins;
+      tds[5].textContent = fmtSigned(bias.bias);
+      tds[5].className = bias.bias > 0 ? "bias-pos" : bias.bias < 0 ? "bias-neg" : "";
+      tds[6].textContent = period;
+      tb.appendChild(tr);
+    });
+    var missing = Object.keys(cmp.banks).filter(function (b) {
+      return !cmp.championship.some(function (c) { return c.bank === b; });
+    }).map(function (b) { return cmp.banks[b].label; });
+    var lead = cmp.championship.length ? cmp.banks[cmp.championship[0].bank].label : "–";
+    document.getElementById("champ-explain").textContent =
+      "Mesterskabet dækker " + cmp.cells.length + " discipliner (produkt × horisont, " +
+      "min. 2 banker). " + lead + " fører." +
+      (missing.length ? " Uden for mesterskabet (for kort historik): " + missing.join(", ") + "." : "");
+  }
+
+  function buildCmpProducts() {
+    var cmp = state.cmp.comparison;
+    var seen = {};
+    cmp.cells.forEach(function (c) { seen[c.product] = true; });
+    var sel = document.getElementById("cmp-product");
+    sel.innerHTML = "";
+    Object.keys(seen).sort().forEach(function (p) {
+      var o = document.createElement("option");
+      o.value = p;
+      o.textContent = cmp.canonical_labels[p] || p;
+      sel.appendChild(o);
+    });
+    if (seen[state.cmp.product]) sel.value = state.cmp.product;
+    else { state.cmp.product = sel.value; }
+  }
+
+  function renderCompareChart() {
+    destroyChart("compare");
+    var cmp = state.cmp.comparison;
+    var P = state.cmp.product, H = state.cmp.horizon;
+    var datasets = [];
+    var allX = [];
+    Object.keys(cmp.banks).forEach(function (b) {
+      var pts = cmpPoints(b, P, H).map(function (pt) {
+        return { x: parseDate(pt.target), y: pt.err, pub: pt.pub,
+                 fc: pt.fc, lo: pt.fc_lo, hi: pt.fc_hi, act: pt.act, hit: pt.hit };
+      });
+      if (!pts.length) return;
+      pts.forEach(function (q) { allX.push(q.x); });
+      datasets.push({
+        label: cmp.banks[b].label,
+        data: pts,
+        backgroundColor: cmp.banks[b].color,
+        borderColor: cmp.banks[b].color,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      });
+    });
+    var ys = [];
+    datasets.forEach(function (ds) { ds.data.forEach(function (q) { ys.push(q.y); }); });
+    function niceFloor(v) { return Math.floor(v * 2) / 2; }
+    function niceCeil(v) { return Math.ceil(v * 2) / 2; }
+    var DAY = 86400000;
+    var ctx = document.getElementById("chart-compare");
+    state.charts.compare = new Chart(ctx, {
+      type: "scatter",
+      data: { datasets: datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: function (items) {
+                var q = items[0].raw;
+                return items[0].dataset.label + " → mål " + fmtDateFull(q.x);
+              },
+              label: function (item) {
+                var q = item.raw;
+                var lines = ["Spået " + fmtDate(parseDate(q.pub)) + ": " + fmtPct(q.fc)];
+                if (q.lo !== null && q.lo !== undefined)
+                  lines.push("Interval: " + fmtPct(q.lo) + " – " + fmtPct(q.hi) +
+                    (q.hit ? " (ramt)" : " (forbi)"));
+                lines.push("Facit: " + fmtPct(q.act));
+                lines.push("Fejl: " + fmtSigned(q.y));
+                return lines;
+              }
+            }
+          }
+        },
+        scales: {
+          x: xScale(allX.length ? {
+            min: Math.min.apply(null, allX) - 20 * DAY,
+            max: Math.max.apply(null, allX) + 20 * DAY
+          } : {}),
+          y: {
+            min: ys.length ? niceFloor(Math.min.apply(null, ys.concat([0])) - 0.25) : -1,
+            max: ys.length ? niceCeil(Math.max.apply(null, ys.concat([0])) + 0.25) : 1,
+            title: { display: true, text: "Fejl i procentpoint" },
+            grid: { color: "rgba(20,40,80,.07)" }
+          }
+        }
+      }
+    });
+    var lg = document.getElementById("cmp-legend");
+    lg.innerHTML = "";
+    datasets.forEach(function (ds) {
+      var s = document.createElement("span");
+      var i = document.createElement("i");
+      i.style.background = ds.backgroundColor;
+      s.appendChild(i);
+      s.appendChild(document.createTextNode(ds.label + " (" + ds.data.length + ")"));
+      lg.appendChild(s);
+    });
+  }
+
+  function renderCellTable() {
+    var cmp = state.cmp.comparison;
+    var P = state.cmp.product, H = state.cmp.horizon;
+    var cell = null;
+    cmp.cells.forEach(function (c) {
+      if (c.product === P && c.horizon === H) cell = c;
+    });
+    var hName = { "3M": "3 mdr.", "6M": "6 mdr.", "9M": "9 mdr.", "12M": "12 mdr." }[H];
+    document.getElementById("cell-title").textContent =
+      "– " + (cmp.canonical_labels[P] || P) + ", " + hName;
+    var tb = document.querySelector("#cell-table tbody");
+    tb.innerHTML = "";
+    if (!cell) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td colspan='6'>Ingen disciplin endnu – for få datapunkter i denne kombination.</td>";
+      tb.appendChild(tr);
+      return;
+    }
+    cell.ranking.forEach(function (b, i) {
+      var m = cell.banks[b];
+      var r = document.createElement("tr");
+      r.innerHTML = "<td></td><td></td><td></td><td></td><td></td><td></td>";
+      var tds = r.querySelectorAll("td");
+      tds[0].textContent = (i + 1) + ".";
+      tds[1].textContent = cmp.banks[b].label;
+      tds[2].textContent = m.n;
+      tds[3].textContent = m.mae === null ? "–" : String(m.mae).replace(".", ",");
+      tds[4].textContent = fmtSigned(m.bias);
+      tds[4].className = m.bias > 0 ? "bias-pos" : m.bias < 0 ? "bias-neg" : "";
+      tds[5].textContent = fmtShare(m.opt_share);
+      tb.appendChild(r);
+    });
+  }
+
+  function renderHitrate() {
+    destroyChart("hitrate");
+    var cmp = state.cmp.comparison;
+    var order = { "3M": 0, "6M": 1, "9M": 2, "12M": 3 };
+    var hs = Object.keys(cmp.rd_hitrate).sort(function (a, b) {
+      return (order[a] === undefined ? 9 : order[a]) - (order[b] === undefined ? 9 : order[b]);
+    });
+    var hName = { "3M": "3 mdr.", "6M": "6 mdr.", "9M": "9 mdr.", "12M": "12 mdr." };
+    var ctx = document.getElementById("chart-hitrate");
+    state.charts.hitrate = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: hs.map(function (h) { return hName[h] || h; }),
+        datasets: [{
+          label: "Hit-rate",
+          data: hs.map(function (h) { return Math.round(cmp.rd_hitrate[h].hit_rate * 100); }),
+          backgroundColor: "rgba(30,125,70,.8)"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (item) {
+                var h = hs[item.dataIndex];
+                return item.parsed.y + " % ramt (n=" + cmp.rd_hitrate[h].n + ")";
+              }
+            }
+          }
+        },
+        scales: {
+          y: { min: 0, max: 100, title: { display: true, text: "% facit i intervallet" },
+               grid: { color: "rgba(20,40,80,.07)" } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function renderCompareAll() {
+    renderCompareChart();
+    renderCellTable();
+  }
+
+  function initCompare() {
+    fetch("data/comparison.json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (cmp) {
+        state.cmp.comparison = cmp;
+        state.cmp.bankData.nykredit = state.data;
+        var others = Object.keys(cmp.banks).filter(function (b) { return b !== "nykredit"; });
+        return Promise.all(others.map(function (b) {
+          return fetch(bankPath(b)).then(function (r) {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.json();
+          }).then(function (d) { state.cmp.bankData[b] = d; });
+        }));
+      })
+      .then(function () {
+        renderChamp();
+        buildCmpProducts();
+        document.getElementById("cmp-horizon").value = state.cmp.horizon;
+        renderCompareAll();
+        renderHitrate();
+        document.getElementById("cmp-product").addEventListener("change", function (e) {
+          state.cmp.product = e.target.value;
+          renderCompareAll();
+        });
+        document.getElementById("cmp-horizon").addEventListener("change", function (e) {
+          state.cmp.horizon = e.target.value;
+          renderCompareAll();
+        });
+      })
+      .catch(function () { /* sammenligning springes over hvis data mangler */ });
   }
 
   /* ---------- init ---------- */
@@ -430,9 +708,8 @@
           state.showAll = e.target.checked;
           renderMain(state.data, state.product);
         });
-        document.getElementById("dl-csv").addEventListener("click", function () {
-          downloadCSV(state.data);
-        });
+        document.getElementById("dl-csv").addEventListener("click", downloadCSV);
+        initCompare();
       })
       .catch(function (err) {
         document.querySelector("#overblik .lede").innerHTML =

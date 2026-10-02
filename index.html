@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Renteprognose-tjekket – Hvor præcise er Nykredits renteprognoser?</title>
 <meta name="description" content="Uafhængig tracking af Nykredits renteprognoser: sammenligner hver prognose med det faktiske renteniveau og visualiserer træfsikkerheden.">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-<script src="js/app.js" defer></script>
+<script src="js/app.js?v=2" defer></script>
 </head>
 <body>
 
@@ -18,6 +18,7 @@
       <a href="#overblik">Overblik</a>
       <a href="#produkter">Prognoser vs. facit</a>
       <a href="#scoreboard">Scoreboard</a>
+      <a href="#sammenlign">Sammenlign banker</a>
       <a href="#metode">Metode &amp; data</a>
     </nav>
   </div>
@@ -32,6 +33,8 @@
         Nykredit opdaterer løbende deres renteprognose for de kommende 12 måneder.
         Her tracker vi <strong>hver eneste prognose siden 2020</strong> og sammenligner den
         med det renteniveau, der faktisk indtraf – så du selv kan se, hvor godt de rammer.
+        Længere nede kan du også <a href="#sammenlign" class="hero-link">sammenligne Nykredit
+        med Nordea, Sydbank, Jyske Bank og Realkredit Danmark</a>.
       </p>
       <div class="stat-grid">
         <div class="stat">
@@ -132,6 +135,80 @@
     </div>
   </section>
 
+  <!-- SAMMENLIGN BANKER -->
+  <section id="sammenlign" class="section">
+    <div class="wrap">
+      <h2>Hvem rammer bedst? Bank-sammenligningen</h2>
+      <p class="section-intro">
+        Vi tracker også renteprognoserne fra <strong>Nordea, Sydbank, Jyske Bank og
+        Realkredit Danmark</strong> – og stiller dem op mod hinanden på de produkter
+        og horisonter, de alle dækker. Hver bank måles mod <strong>sit eget</strong>
+        faktiske renteniveau, præcis som ovenfor.
+      </p>
+
+      <div class="champ-card">
+        <h3>Mesterskabstabellen <span class="h3-sub">– middelrang på tværs af alle discipliner</span></h3>
+        <p class="chart-explain" id="champ-explain">–</p>
+        <div class="table-scroll">
+          <table id="champ-table">
+            <thead>
+              <tr><th>#</th><th>Bank</th><th>Middelrang</th><th>Discipliner</th>
+                  <th>Delsejre</th><th>Bias F3+F5</th><th>Periode</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Head-to-head: prognosefejl pr. bank <span class="h3-sub">– samme produkt, samme horisont</span></h3>
+        <p class="chart-explain">
+          Hver prik er én prognose fra én bank. Bankerne kan dermed sammenlignes direkte:
+          <strong>jo tættere på nul, desto bedre ramt.</strong>
+        </p>
+        <div class="compare-controls">
+          <label>Produkt:
+            <select id="cmp-product"></select>
+          </label>
+          <label>Horisont:
+            <select id="cmp-horizon">
+              <option value="3M">3 måneder</option>
+              <option value="6M">6 måneder</option>
+              <option value="9M">9 måneder</option>
+              <option value="12M">12 måneder</option>
+            </select>
+          </label>
+        </div>
+        <div class="chart-box"><canvas id="chart-compare"></canvas></div>
+        <div class="legend" id="cmp-legend"></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Disciplin-rangliste <span class="h3-sub" id="cell-title">–</span></h3>
+        <p class="chart-explain">Rangering efter middel absolut fejl (MAE) i den valgte disciplin.</p>
+        <div class="table-scroll">
+          <table id="cell-table">
+            <thead>
+              <tr><th>#</th><th>Bank</th><th>Antal</th><th>MAE</th><th>Bias</th>
+                  <th>Andel for optimistiske</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Realkredit Danmarks intervaller: hvor ofte rammer de? <span class="h3-sub">– hit-rate</span></h3>
+        <p class="chart-explain">
+          Realkredit Danmark spår ikke ét tal, men et interval (fx 2,9–3,2 %).
+          Her er andelen af gange, hvor facit landede <strong>inde i intervallet</strong> –
+          fordelt på horisont. Jo længere ud i fremtiden, desto oftere rammer de forbi.
+        </p>
+        <div class="chart-box chart-box-sm"><canvas id="chart-hitrate"></canvas></div>
+      </div>
+    </div>
+  </section>
+
   <!-- METODE -->
   <section id="metode" class="section">
     <div class="wrap narrow">
@@ -167,6 +244,37 @@
         <li>Dette er et uafhængigt hobbyprojekt uden tilknytning til Nykredit.
           Intet her er investerings- eller lånerådgivning.</li>
       </ul>
+      <h3>Hvordan sammenlignes bankerne?</h3>
+      <p>
+        Hver bank måles mod <strong>sit eget</strong> faktiske renteniveau
+        (egen Aktuelt-kolonne – for Realkredit Danmark dog deres historiske
+        FlexLån-serie). Rangeringen sker kun på <strong>fællesmængden</strong>:
+        pr. (produkt, horisont)-disciplin med mindst 2 banker rangeres der efter
+        middel absolut fejl (MAE), og mesterskabet er bankernes middelrang på
+        tværs af discipliner.
+      </p>
+      <ul>
+        <li><strong>Nordea:</strong> F1/F3/F5, 4 % obligationslån (effektiv rente),
+          CITA6/CIBOR3/CIBOR6 uden tillæg. Historik fra 2020. Første kolonne er aktuel værdi.</li>
+        <li><strong>Sydbank:</strong> F-kort/F3/F5, Cita3M/Cibor3M samt 10-årig stat
+          og 30-årig realkreditrente. Relative horisonter (0-3/3-6/6-12 mdr.).
+          Siden er ny – historik kun fra september 2025, så Sydbank deltager endnu
+          ikke i mesterskabet.</li>
+        <li><strong>Jyske Bank:</strong> Rentetilpasning F1/F3/F5
+          <em>ekskl. kursfradrag</em> (derfor +0,3/+0,2/+0,2 pp i niveausammenligninger;
+          fejlene er upåvirkede). Historik fra 2024. 'Fast 30 år' er en flad kupon
+          og indgår ikke i rangeringen.</li>
+        <li><strong>Realkredit Danmark:</strong> FlexLån F1/F3/F5 som intervaller –
+          fejl måles mod intervallets midtpunkt, og hit-rate viser hvor ofte facit
+          ramte intervallet. FlexKort har egen Aktuelt-kolonne. Historik fra 2021.</li>
+        <li><strong>Totalkredit</strong> er udeladt: de udgiver ingen prognosetabel,
+          kun prosatekst (og er i øvrigt en del af Nykredit-koncernen).</li>
+      </ul>
+      <p>
+        Bankerne har forskellig historiklængde (og dermed forskellig eksponering
+        mod fx rentestødet i 2022). Periode og antal prognoser fremgår af tabellerne –
+        sammenlign med det in mente.
+      </p>
       <h3>Hent dataene</h3>
       <p>
         Alle tal på siden kan hentes frit – byg gerne videre på dem:

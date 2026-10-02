@@ -24,11 +24,17 @@ jobs:
       - name: Installer afhængigheder
         run: pip install -r scraper/requirements.txt
 
-      - name: Hent aktuel prognose
+      - name: Hent aktuelle prognoser (alle banker)
         run: python scraper/scrape.py update
 
-      - name: Genbyg datasæt
-        run: python scraper/build.py
+      - name: Hent RD's historiske FlexLån-renter (facit)
+        run: python scraper/scrape.py facit-rd
+
+      - name: Genbyg datasæt (alle banker)
+        run: python scraper/build.py all
+
+      - name: Genbyg bank-sammenligning
+        run: python scraper/compare.py
 
       - name: Commit nye data (hvis ændret)
         run: |

@@ -1,0 +1,86 @@
+{
+ "bank": "jyske",
+ "source": "wayback",
+ "capture": "20250418040013",
+ "obs_date": "2025-04-18",
+ "pub_date": "2025-04-18",
+ "recalc_date": null,
+ "targets": [
+  "2025-07-11",
+  "2025-10-11",
+  "2026-04-11",
+  "2027-04-11"
+ ],
+ "rows": {
+  "f1": {
+   "name": "Jyske Rentetilpasning F1",
+   "aktuelt": 2.02,
+   "forecasts": [
+    1.95,
+    1.94,
+    2.2,
+    2.4
+   ]
+  },
+  "f3": {
+   "name": "Jyske Rentetilpasning F3",
+   "aktuelt": 2.2,
+   "forecasts": [
+    2.24,
+    2.26,
+    2.42,
+    2.62
+   ]
+  },
+  "f5": {
+   "name": "Jyske Rentetilpasning F5",
+   "aktuelt": 2.45,
+   "forecasts": [
+    2.44,
+    2.47,
+    2.59,
+    2.74
+   ]
+  },
+  "fast30kupon": {
+   "name": "Jyske Fast Rente (30 år)",
+   "aktuelt": 4.0,
+   "forecasts": [
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ]
+  }
+ },
+ "raw_rows": {
+  "f1 (Jyske Rentetilpasning F1)": [
+   2.02,
+   1.95,
+   1.94,
+   2.2,
+   2.4
+  ],
+  "f3 (Jyske Rentetilpasning F3)": [
+   2.2,
+   2.24,
+   2.26,
+   2.42,
+   2.62
+  ],
+  "f5 (Jyske Rentetilpasning F5)": [
+   2.45,
+   2.44,
+   2.47,
+   2.59,
+   2.74
+  ],
+  "fast30kupon (Jyske Fast Rente (30 år))": [
+   4.0,
+   4.0,
+   4.0,
+   4.0,
+   4.0
+  ]
+ }
+}

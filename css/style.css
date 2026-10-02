@@ -86,6 +86,34 @@ body {
 }
 .meter-scale { display: flex; justify-content: space-between; font-size: .8rem; color: #b9c8e0; margin-top: 4px; }
 
+.hero-link { color: #fff; font-weight: 700; text-decoration: underline; }
+.hero-link:hover { color: #cfe0f5; }
+
+/* sammenlign banker */
+.champ-card {
+  background: linear-gradient(180deg, #0f2c52 0%, #17457e 100%);
+  color: #fff; border-radius: var(--radius);
+  padding: 20px 20px 12px; margin: 22px 0;
+}
+.champ-card h3 { margin: 0 0 4px; }
+.champ-card .h3-sub { color: #b9c8e0; }
+.champ-card .chart-explain { color: #dbe6f5; }
+.champ-card table { background: transparent; font-size: .93rem; }
+.champ-card thead th { background: rgba(255,255,255,.12); }
+.champ-card tbody td { border-bottom-color: rgba(255,255,255,.15); color: #fff; }
+.champ-card tbody tr:hover { background: rgba(255,255,255,.08); }
+.champ-card td.bias-pos { color: #ffb3a7; }
+.champ-card td.bias-neg { color: #8fd6a4; }
+.champ-winner { font-weight: 800; }
+.compare-controls { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 10px; font-weight: 600; }
+.compare-controls select {
+  font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+  margin-left: 6px; font-weight: 400;
+}
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 2px 4px; font-size: .88rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
 /* sections */
 .section { padding: 52px 0; }
 .section-alt { background: var(--bg-alt); }

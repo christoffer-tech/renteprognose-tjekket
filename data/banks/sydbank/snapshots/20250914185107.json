@@ -1,0 +1,107 @@
+{
+ "bank": "sydbank",
+ "source": "wayback",
+ "capture": "20250914185107",
+ "obs_date": "2025-09-14",
+ "pub_date": "2025-09-14",
+ "recalc_date": null,
+ "targets": [
+  "2025-12-14",
+  "2026-03-14",
+  "2026-09-14"
+ ],
+ "rows": {
+  "stat10": {
+   "name": "10-årig statsobligationsrente",
+   "aktuelt": 2.48,
+   "forecasts": [
+    2.6,
+    2.65,
+    2.8
+   ]
+  },
+  "cibor3": {
+   "name": "Kort rente (Cibor3M)",
+   "aktuelt": 1.98,
+   "forecasts": [
+    1.9,
+    1.8,
+    1.8
+   ]
+  },
+  "fkort": {
+   "name": "F-kort realkreditrente",
+   "aktuelt": 2.2,
+   "forecasts": [
+    2.2,
+    2.1,
+    2.1
+   ]
+  },
+  "f3": {
+   "name": "F3 realkreditrente",
+   "aktuelt": 2.11,
+   "forecasts": [
+    2.15,
+    2.15,
+    2.15
+   ]
+  },
+  "f5": {
+   "name": "F5 realkreditrente",
+   "aktuelt": 2.38,
+   "forecasts": [
+    2.4,
+    2.45,
+    2.55
+   ]
+  },
+  "fast30": {
+   "name": "30-årig realkreditrente",
+   "aktuelt": 4.04,
+   "forecasts": [
+    4.1,
+    4.15,
+    4.2
+   ]
+  }
+ },
+ "raw_rows": {
+  "10-årig statsobligationsrente": [
+   2.48,
+   2.6,
+   2.65,
+   2.8
+  ],
+  "Kort rente (Cibor3M)": [
+   1.98,
+   1.9,
+   1.8,
+   1.8
+  ],
+  "F-kort realkreditrente": [
+   2.2,
+   2.2,
+   2.1,
+   2.1
+  ],
+  "F3 realkreditrente": [
+   2.11,
+   2.15,
+   2.15,
+   2.15
+  ],
+  "F5 realkreditrente": [
+   2.38,
+   2.4,
+   2.45,
+   2.55
+  ],
+  "30-årig realkreditrente": [
+   4.04,
+   4.1,
+   4.15,
+   4.2
+  ]
+ }
+}

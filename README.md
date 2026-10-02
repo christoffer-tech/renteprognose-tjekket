@@ -20,12 +20,18 @@ Siden er statisk (HTML/CSS/JS + Chart.js) og hostes gratis på
 | Sti | Indhold |
 |---|---|
 | `index.html`, `css/`, `js/` | Den statiske hjemmeside (dansk UI) |
-| `scraper/scrape.py` | Henter prognosetabellen (live + Wayback Machine) → `data/snapshots/*.json` |
-| `scraper/build.py` | Sammenholder prognoser med facit → `data/dataset.json` (sidens datakilde) |
-| `scraper/validate.py` | Udskriver metrics + spot-tjek (køres manuelt) |
-| `data/snapshots/` | Ét JSON-snapshot pr. observation (historik + løbende) |
-| `data/dataset.json` | Kompileret datasæt som siden læser |
-| `.github/workflows/update.yml` | Ugentlig auto-opdatering |
+| `scraper/scrape.py` | Orkestrering: live-scrape + Wayback-backfill pr. bank |
+| `scraper/banks/*.py` | Parser-plugins pr. bank (nykredit, nordea, sydbank, jyske, rd) |
+| `scraper/common.py` | Fælles HTTP/parse/snapshot-hjælpere |
+| `scraper/build.py` | Prognoser vs. facit pr. bank → `data/dataset.json` + `data/banks/*/dataset.json` |
+| `scraper/compare.py` | Fællesmængde-rangering → `data/comparison.json` (mesterskab m.m.) |
+| `scraper/validate.py`, `validate_banks.py` | Metrics + spot-tjek (køres manuelt) |
+| `data/snapshots/` | Nykredit-snapshots (legacy-sti) |
+| `data/banks/<bank>/snapshots/` | Snapshots pr. bank + `facit.json` (RD) |
+| `.github/workflows/update.yml` | Ugentlig auto-opdatering (alle banker) |
+
+Banker: Nykredit, Nordea, Sydbank, Jyske Bank, Realkredit Danmark.
+Totalkredit er bevidst udeladt (ingen prognosetabel, kun prosatekst).
 
 ## Metode (kort)
 
@@ -39,10 +45,12 @@ live-siden ugentligt. Se "Metode & data" på selve siden for forbehold.
 ## Kør lokalt
 
 ```powershell
-# 1) (valgfrit) hent seneste prognose + genbyg datasæt
+# 1) (valgfrit) hent seneste prognoser + genbyg datasæt
 pip install -r scraper/requirements.txt
 python scraper/scrape.py update
-python scraper/build.py
+python scraper/scrape.py facit-rd
+python scraper/build.py all
+python scraper/compare.py
 
 # 2) servér siden (fetch af JSON virker ikke via file://)
 python -m http.server --directory C:\sti\til\Renteprognose 8000
