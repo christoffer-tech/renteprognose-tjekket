@@ -163,6 +163,13 @@ def main() -> None:
             rd_hits[h] = {"n": len(hits),
                           "hit_rate": round(sum(1 for x in hits if x) / len(hits), 3)}
 
+    # overall pr. bank (alle produkter/horisonter) - bruges til Skam-skammelen
+    overall = {}
+    for bank, ds in datasets.items():
+        pubs = [pt["pub"] for pt in ds["points"] if pt["err"] is not None]
+        overall[bank] = {**ds["overall"],
+                         "period": [min(pubs), max(pubs)] if pubs else [None, None]}
+
     comparison = {
         "meta": {
             "generated": dt.datetime.now().isoformat(timespec="seconds"),
@@ -178,6 +185,7 @@ def main() -> None:
         "cells": cells,
         "championship": championship,
         "bias_table": bias_table,
+        "overall": overall,
         "rd_hitrate": rd_hits,
         "level_adjust": LEVEL_ADJUST,
     }

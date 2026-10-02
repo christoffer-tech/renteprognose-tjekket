@@ -67,7 +67,7 @@
     }, extra || {});
   }
 
-  var state = { data: null, product: null, showAll: true, charts: {} };
+  var state = { data: null, product: null, showAll: true, charts: {}, bank: "nykredit" };
 
   function destroyChart(key) {
     if (state.charts[key]) { state.charts[key].destroy(); delete state.charts[key]; }
@@ -653,6 +653,101 @@
     renderCellTable();
   }
 
+  /* ---------- bankvælger + skam-skammel ---------- */
+  function buildBankPicker() {
+    var cmp = state.cmp.comparison;
+    ["bank-picker", "bank-picker-2"].forEach(function (id) {
+      var box = document.getElementById(id);
+      if (!box) return;
+      box.innerHTML = "";
+      Object.keys(cmp.banks).forEach(function (b) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.setAttribute("role", "tab");
+        var dot = document.createElement("i");
+        dot.style.background = cmp.banks[b].color;
+        btn.appendChild(dot);
+        btn.appendChild(document.createTextNode(cmp.banks[b].label));
+        if (b === state.bank) btn.className = "active";
+        btn.addEventListener("click", function () { selectBank(b, true); });
+        box.appendChild(btn);
+      });
+    });
+  }
+
+  function selectBank(b, scroll) {
+    if (!state.cmp.bankData[b]) return;
+    state.bank = b;
+    state.data = state.cmp.bankData[b];
+    state.product = state.data.order.indexOf("f5") !== -1 ? "f5" : state.data.order[0];
+    document.getElementById("bank-name-produkter").textContent =
+      state.cmp.comparison.banks[b].label;
+    document.getElementById("bank-name-score").textContent =
+      state.cmp.comparison.banks[b].label;
+    document.getElementById("dl-json").href = bankPath(b);
+    renderHero(state.data);
+    renderTabs(state.data);
+    renderProduct();
+    renderScore(state.data);
+    var btns = document.querySelectorAll(".bank-picker button");
+    var keys = Object.keys(state.cmp.comparison.banks);
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].className = keys[i % keys.length] === b ? "active" : "";
+    }
+    if (scroll) {
+      document.getElementById("produkter").scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  var PODIUM_MIN_N = 30;
+
+  function renderPodium() {
+    var cmp = state.cmp.comparison;
+    var excluded = Object.keys(cmp.overall).filter(function (b) {
+      var o = cmp.overall[b];
+      return o.mae === null || (o.n || 0) < PODIUM_MIN_N;
+    });
+    var ranked = Object.keys(cmp.overall)
+      .filter(function (b) { return excluded.indexOf(b) === -1; })
+      .sort(function (a, b) { return cmp.overall[b].mae - cmp.overall[a].mae; })
+      .slice(0, 3);
+    var note = "Skammelen måler den rene gennemsnitsfejl (MAE) på alle prognoser " +
+      "med facit (min. " + PODIUM_MIN_N + " stk.). " +
+      (excluded.length ? "Endnu ikke med: " +
+        excluded.map(function (b) { return cmp.banks[b].label; }).join(", ") + ". " : "") +
+      "Den fair disciplin-for-disciplin-sammenligning finder du i mesterskabet længere nede.";
+    var noteEl = document.getElementById("podium-note");
+    noteEl.innerHTML = "";
+    noteEl.appendChild(document.createTextNode(note.split("mesterskabet")[0]));
+    var a = document.createElement("a");
+    a.href = "#sammenlign";
+    a.textContent = "mesterskabet";
+    noteEl.appendChild(a);
+    noteEl.appendChild(document.createTextNode(" længere nede."));
+    var box = document.getElementById("podium");
+    box.innerHTML = "";
+    if (ranked.length < 3) return;
+    var order = [ranked[1], ranked[0], ranked[2]];
+    var cls = ["second", "first", "third"];
+    var maxMae = cmp.overall[ranked[0]].mae;
+    order.forEach(function (b, i) {
+      var o = cmp.overall[b];
+      var step = document.createElement("div");
+      step.className = "podium-step " + cls[i];
+      var period = o.period && o.period[0]
+        ? fmtDate(parseDate(o.period[0])) + "–" + fmtDate(parseDate(o.period[1])) : "";
+      step.innerHTML =
+        "<div class='place'>" + (i === 1 ? "1." : i === 0 ? "2." : "3.") + "</div>" +
+        "<div class='bank'>" + cmp.banks[b].label + "</div>" +
+        "<div class='mae'>" + o.mae.toFixed(2).replace(".", ",") + " pp</div>" +
+        "<div class='sub'>gns. fejlskud · n=" + o.n + "<br>" + period + "</div>" +
+        "<div class='bar' style='background:" + cmp.banks[b].color +
+        ";width:" + Math.round(o.mae / maxMae * 100) + "%'></div>";
+      step.addEventListener("click", function () { selectBank(b, true); });
+      box.appendChild(step);
+    });
+  }
+
   function initCompare() {
     fetch("data/comparison.json")
       .then(function (r) {
@@ -672,6 +767,8 @@
       })
       .then(function () {
         renderChamp();
+        buildBankPicker();
+        renderPodium();
         buildCmpProducts();
         document.getElementById("cmp-horizon").value = state.cmp.horizon;
         renderCompareAll();

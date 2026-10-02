@@ -64,6 +64,46 @@ body {
 .stat-sub { font-size: .85rem; color: #b9c8e0; }
 .stat-sub em { font-style: normal; text-decoration: underline dotted; }
 
+/* bank-picker */
+.bank-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.bank-picker button {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08);
+  color: #fff; border-radius: 999px; padding: 9px 18px;
+  font-size: .95rem; font-weight: 700; cursor: pointer;
+}
+.bank-picker button i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.bank-picker button:hover { background: rgba(255,255,255,.18); }
+.bank-picker button.active { background: #fff; color: #0f2c52; border-color: #fff; }
+.bank-picker.light { margin: 0 0 18px; }
+.bank-picker.light button {
+  border-color: var(--line); background: #fff; color: var(--ink);
+}
+.bank-picker.light button:hover { border-color: var(--accent); color: var(--accent); background: #fff; }
+.bank-picker.light button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* skam-skammel */
+.podium-section { background: #141414; color: #f2f2f2; padding: 52px 0 60px; }
+.podium-section h2 { margin: 0 0 8px; font-size: 1.8rem; }
+.section-intro.light { color: #c9c9c9; }
+.podium { display: flex; gap: 14px; align-items: flex-end; margin-top: 26px; }
+.podium-step {
+  flex: 1; text-align: center; border-radius: var(--radius) var(--radius) 0 0;
+  padding: 18px 10px 22px; cursor: pointer; border: 1px solid #333;
+  border-bottom: none; background: #1f1f1f;
+}
+.podium-step:hover { background: #2a2a2a; }
+.podium-step .place { font-size: 2.2rem; font-weight: 800; color: #8a8a8a; }
+.podium-step.first .place { color: #ffd75e; }
+.podium-step .bank { font-weight: 800; font-size: 1.02rem; margin-top: 2px; }
+.podium-step .mae { font-size: 1.7rem; font-weight: 800; margin-top: 6px; }
+.podium-step .sub { font-size: .82rem; color: #a8a8a8; margin-top: 2px; }
+.podium-step.first { padding-top: 34px; background: #26221a; border-color: #6b5d2a; }
+.podium-step.second { padding-top: 22px; }
+.podium-step .bar { height: 8px; border-radius: 4px; margin: 10px auto 0; max-width: 130px; }
+.podium-note { color: #a8a8a8; font-size: .88rem; margin-top: 18px; }
+.podium-note a { color: #9ec5f0; }
+
 /* optimisme-meter */
 .meter-block { margin-top: 30px; max-width: 720px; }
 .meter-title { font-weight: 700; margin-bottom: 8px; }

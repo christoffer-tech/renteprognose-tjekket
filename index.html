@@ -28,14 +28,14 @@
   <!-- HERO / OVERBLIK -->
   <section id="overblik" class="hero">
     <div class="wrap">
-      <h1>Hvor præcise er Nykredits renteprognoser?</h1>
+      <h1>Bankerne spår renterne. Vi gemmer kvitteringen.</h1>
       <p class="lede">
-        Nykredit opdaterer løbende deres renteprognose for de kommende 12 måneder.
-        Her tracker vi <strong>hver eneste prognose siden 2020</strong> og sammenligner den
-        med det renteniveau, der faktisk indtraf – så du selv kan se, hvor godt de rammer.
-        Længere nede kan du også <a href="#sammenlign" class="hero-link">sammenligne Nykredit
-        med Nordea, Sydbank, Jyske Bank, Realkredit Danmark og Sparekassen Kronjylland</a>.
+        Hver måned fortæller bankerne os, hvor renten er på vej hen. Vi tracker
+        <strong>hver eneste prognose fra 6 banker</strong> og holder den op mod facit –
+        så du kan se, hvem der rammer plet, og hvem der spår i blinde.
+        Vælg en bank herunder og se dens fulde regnskab.
       </p>
+      <div class="bank-picker" id="bank-picker" role="tablist" aria-label="Vælg bank"></div>
       <div class="stat-grid">
         <div class="stat">
           <div class="stat-value" id="stat-bias">–</div>
@@ -70,10 +70,26 @@
     </div>
   </section>
 
+  <!-- SKAM-SKAMMELEN -->
+  <section id="skam" class="podium-section">
+    <div class="wrap">
+      <h2>Skam-skammelen</h2>
+      <p class="section-intro light">
+        De tre banker med de <strong>største gennemsnitlige fejlskud</strong> –
+        målt på alt, de har spået. Klik på en bank for at se dens fulde regnskab nedenfor.
+      </p>
+      <div class="podium" id="podium"></div>
+      <p class="podium-note" id="podium-note">Skammelen måler den rene gennemsnitsfejl (MAE).
+        Den fair disciplin-for-disciplin-sammenligning finder du i
+        <a href="#sammenlign">mesterskabet</a> længere nede.</p>
+    </div>
+  </section>
+
   <!-- PRODUKT-GRAFER -->
   <section id="produkter" class="section">
     <div class="wrap">
-      <h2>Prognose mod facit</h2>
+      <div class="bank-picker light" id="bank-picker-2" role="tablist" aria-label="Vælg bank"></div>
+      <h2><span id="bank-name-produkter">Nykredit</span>s prognoser mod facit</h2>
       <p class="section-intro">
         Den <strong>sorte linje</strong> er den faktiske rente. Hver <strong>tynd linje</strong>
         er én prognose fra en given dato – den starter ved det dengang aktuelle niveau
@@ -108,7 +124,7 @@
   <!-- SCOREBOARD -->
   <section id="scoreboard" class="section section-alt">
     <div class="wrap">
-      <h2>Scoreboard</h2>
+      <h2>Scoreboard: <span id="bank-name-score">Nykredit</span></h2>
       <p class="section-intro">
         Gennemsnitlig fejl (bias), middel absolut fejl (MAE) og andelen af for optimistiske
         prognoser – pr. lånetype og pr. horisont. Alt i procentpoint.
@@ -276,7 +292,9 @@
       <p>
         Bankerne har forskellig historiklængde (og dermed forskellig eksponering
         mod fx rentestødet i 2022). Periode og antal prognoser fremgår af tabellerne –
-        sammenlign med det in mente.
+        sammenlign med det in mente. Skam-skammelen øverst rangerer efter middel
+        absolut fejl (MAE) på <em>alle</em> bankens prognoser med facit, mens
+        mesterskabet kun sammenligner på fælles discipliner.
       </p>
       <h3>Hent dataene</h3>
       <p>
