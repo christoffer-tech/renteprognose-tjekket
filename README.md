@@ -67,14 +67,17 @@ python scraper/validate.py          # udskriv metrics + spot-tjek
 
 ## Udgiv på GitHub Pages
 
-1. Opret et nyt tomt repo på GitHub (fx `renteprognose-tjekket`).
-2. Push projektet:
+1. Omdøb branchen til `main` og opret + push repoet (kræver `gh`, GitHub CLI,
+   og at du er logget ind med `gh auth login`):
    ```powershell
-   git remote add origin https://github.com/DIT-BRUGERNAVN/renteprognose-tjekket.git
-   git push -u origin main
+   git branch -M main
+   gh repo create renteprognose-tjekket --public --source=. --push
    ```
+   Alternativt uden `gh`: opret et tomt repo på github.com, og kør
+   `git remote add origin https://github.com/DIT-BRUGERNAVN/REPO.git`
+   efterfulgt af `git push -u origin main`.
 3. På GitHub: **Settings → Pages → Deploy from a branch → `main` / `/ (root)`**.
-4. Siden er live på `https://DIT-BRUGERNAVN.github.io/renteprognose-tjekket/` efter få minutter.
+4. Siden er live på `https://DIT-BRUGERNAVN.github.io/REPO/` efter få minutter.
 5. Auto-opdateringen kører af sig selv hver mandag (kan også startes manuelt under
    **Actions → Opdater renteprognose-data → Run workflow**).
 
