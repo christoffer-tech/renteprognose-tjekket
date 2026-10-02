@@ -41,6 +41,7 @@ BANK_LABELS = {
     "sydbank": "Sydbank",
     "jyske": "Jyske Bank",
     "rd": "Realkredit Danmark",
+    "sparkron": "Sparekassen Kronjylland",
 }
 BANK_COLORS = {
     "nykredit": "#1f5fa8",
@@ -48,6 +49,7 @@ BANK_COLORS = {
     "sydbank": "#d62728",
     "jyske": "#2ca02c",
     "rd": "#9467bd",
+    "sparkron": "#ff7f0e",
 }
 
 # bank-produkt -> kanonisk sammenligningsprodukt
@@ -60,6 +62,8 @@ CANONICAL_MAP = {
                 "cibor3": "CIBOR3", "fast30": "FAST30"},
     "jyske": {"f1": "F1", "f3": "F3", "f5": "F5"},
     "rd": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT"},
+    "sparkron": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT",
+                 "cita3": "CITA3", "fast30": "FAST30"},
 }
 CANONICAL_LABELS = {
     "F1": "F1", "F3": "F3", "F5": "F5", "FKORT": "F-kort-type",

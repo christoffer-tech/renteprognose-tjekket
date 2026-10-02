@@ -30,7 +30,8 @@ Siden er statisk (HTML/CSS/JS + Chart.js) og hostes gratis på
 | `data/banks/<bank>/snapshots/` | Snapshots pr. bank + `facit.json` (RD) |
 | `.github/workflows/update.yml` | Ugentlig auto-opdatering (alle banker) |
 
-Banker: Nykredit, Nordea, Sydbank, Jyske Bank, Realkredit Danmark.
+Banker: Nykredit, Nordea, Sydbank, Jyske Bank, Realkredit Danmark,
+Sparekassen Kronjylland.
 Totalkredit er bevidst udeladt (ingen prognosetabel, kun prosatekst).
 
 ## Metode (kort)

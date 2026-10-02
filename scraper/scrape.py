@@ -19,11 +19,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from banks import jyske, nordea, nykredit, rd, sydbank
+from banks import jyske, nordea, nykredit, rd, sparkron, sydbank
 from common import (BROWSER_HEADERS, ROOT, fetch, list_captures,
                     snapshot_fingerprint, wayback_url)
 
-BANKS = {m.BANK_ID: m for m in (nykredit, nordea, sydbank, jyske, rd)}
+BANKS = {m.BANK_ID: m for m in (nykredit, nordea, sydbank, jyske, rd, sparkron)}
 
 BANK_HEADERS = {"sydbank": BROWSER_HEADERS}
 

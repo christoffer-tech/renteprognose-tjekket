@@ -53,6 +53,7 @@ BANK_LABELS = {
     "sydbank": "Sydbank",
     "jyske": "Jyske Bank",
     "rd": "Realkredit Danmark",
+    "sparkron": "Sparekassen Kronjylland",
 }
 
 

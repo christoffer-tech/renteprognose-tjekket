@@ -394,7 +394,8 @@
                  "facit_pct", "facit_dato", "fejl_pp", "ramt_interval"]];
     function num(v) { return v === null || v === undefined ? "" : String(v).replace(".", ","); }
     var bankName = { nykredit: "Nykredit", nordea: "Nordea", sydbank: "Sydbank",
-                     jyske: "Jyske Bank", rd: "Realkredit Danmark" };
+                     jyske: "Jyske Bank", rd: "Realkredit Danmark",
+                     sparkron: "Sparekassen Kronjylland" };
     var all = state.cmp.bankData && Object.keys(state.cmp.bankData).length
       ? state.cmp.bankData : { nykredit: state.data };
     Object.keys(all).forEach(function (b) {
