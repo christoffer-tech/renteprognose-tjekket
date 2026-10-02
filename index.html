@@ -36,6 +36,14 @@
         Vælg en bank herunder og se dens fulde regnskab.
       </p>
       <div class="bank-picker" id="bank-picker" role="tablist" aria-label="Vælg bank"></div>
+      <div class="period-picker" role="group" aria-label="Vælg periode">
+        <span class="period-label">Periode:</span>
+        <button type="button" data-period="all" class="active">Alt</button>
+        <button type="button" data-period="1y">Seneste 1 år</button>
+        <button type="button" data-period="3y">Seneste 3 år</button>
+        <button type="button" data-period="overlap">Overlappende</button>
+        <span class="period-window" id="period-window"></span>
+      </div>
       <div class="stat-grid">
         <div class="stat">
           <div class="stat-value" id="stat-bias">–</div>
@@ -108,7 +116,7 @@
       </div>
       <div class="chart-card">
         <h3 id="chart-title">–</h3>
-        <div class="chart-box"><canvas id="chart-main"></canvas></div>
+        <div class="chart-box"><canvas id="chart-main"></canvas><p class="chart-empty" id="empty-main" hidden>Ingen prognoser i den valgte periode.</p></div>
       </div>
       <div class="chart-card">
         <h3>Prognosefejlen over tid <span class="h3-sub">– facit minus prognose, i procentpoint</span></h3>
@@ -117,11 +125,11 @@
           <strong class="up">Prikker over nul = for optimistisk</strong> (renten endte højere end spået).
           <strong class="down">Prikker under nul = for pessimistisk.</strong>
         </p>
-        <div class="chart-box"><canvas id="chart-error"></canvas></div>
+        <div class="chart-box"><canvas id="chart-error"></canvas><p class="chart-empty" id="empty-error" hidden>Ingen prognoser i den valgte periode.</p></div>
       </div>
       <div class="chart-card">
         <h3>Fejl pr. horisont <span class="h3-sub">– rammer de bedre på kort eller lang sigt?</span></h3>
-        <div class="chart-box chart-box-sm"><canvas id="chart-horizon"></canvas></div>
+        <div class="chart-box chart-box-sm"><canvas id="chart-horizon"></canvas><p class="chart-empty" id="empty-horizon" hidden>Ingen prognoser i den valgte periode.</p></div>
       </div>
     </div>
   </section>
@@ -201,7 +209,7 @@
             </select>
           </label>
         </div>
-        <div class="chart-box"><canvas id="chart-compare"></canvas></div>
+        <div class="chart-box"><canvas id="chart-compare"></canvas><p class="chart-empty" id="empty-compare" hidden>Ingen prognoser i den valgte periode.</p></div>
         <div class="legend" id="cmp-legend"></div>
       </div>
 
@@ -226,7 +234,7 @@
           Her er andelen af gange, hvor facit landede <strong>inde i intervallet</strong> –
           fordelt på horisont. Jo længere ud i fremtiden, desto oftere rammer de forbi.
         </p>
-        <div class="chart-box chart-box-sm"><canvas id="chart-hitrate"></canvas></div>
+        <div class="chart-box chart-box-sm"><canvas id="chart-hitrate"></canvas><p class="chart-empty" id="empty-hitrate" hidden>Ingen prognoser i den valgte periode.</p></div>
       </div>
     </div>
   </section>
@@ -302,7 +310,11 @@
         mod fx rentestødet i 2022). Periode og antal prognoser fremgår af tabellerne –
         sammenlign med det in mente. Skam-skammelen øverst rangerer efter middel
         absolut fejl (MAE) på <em>alle</em> bankens prognoser med facit, mens
-        mesterskabet kun sammenligner på fælles discipliner.
+        mesterskabet kun sammenligner på fælles discipliner. Med periode-vælgeren
+        øverst kan hele siden – grafer, skammel, mesterskab og tabeller –
+        begrænses til prognoser spået inden for fx det seneste år eller den
+        overlappende periode (fra den yngste banks første prognose med facit),
+        så bankerne sammenlignes på samme tidshorisont.
       </p>
       <h3>Hent dataene</h3>
       <p>

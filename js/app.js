@@ -67,28 +67,74 @@
     }, extra || {});
   }
 
-  var state = { data: null, product: null, showAll: true, charts: {}, bank: "nykredit" };
+  var state = { data: null, product: null, showAll: true, charts: {}, bank: "nykredit",
+                period: "all", overlapStart: null };
+
+  /* ---------- periode-filter ---------- */
+  function isoDate(d) {
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
+  function windowStart() {
+    if (state.period === "all") return null;
+    if (state.period === "overlap") return state.overlapStart;
+    var d = new Date();
+    d.setFullYear(d.getFullYear() - (state.period === "1y" ? 1 : 3));
+    return isoDate(d);
+  }
+  function inWin(pub) {
+    var s = windowStart();
+    return !s || pub >= s;
+  }
+  function jsSummarize(errors) {
+    var n = errors.length;
+    if (!n) return { n: 0, bias: null, mae: null, rmse: null, opt_share: null, pess_share: null };
+    function r3(v) { return Math.round(v * 1000) / 1000; }
+    var sum = 0, ae = 0, se = 0, opt = 0, pess = 0;
+    errors.forEach(function (e) {
+      sum += e; ae += Math.abs(e); se += e * e;
+      if (e > 0) opt++; else if (e < 0) pess++;
+    });
+    return { n: n, bias: r3(sum / n), mae: r3(ae / n), rmse: r3(Math.sqrt(se / n)),
+             opt_share: r3(opt / n), pess_share: r3(pess / n) };
+  }
+  function setEmpty(key, empty) {
+    var c = document.getElementById("chart-" + key);
+    var e = document.getElementById("empty-" + key);
+    if (c) c.style.display = empty ? "none" : "";
+    if (e) e.hidden = !empty;
+    if (empty) destroyChart(key);
+  }
 
   function destroyChart(key) {
     if (state.charts[key]) { state.charts[key].destroy(); delete state.charts[key]; }
   }
 
   /* ---------- hero ---------- */
-  function renderHero(d) {
-    var o = d.overall;
+  function heroPoints() {
+    return state.data.points.filter(function (p) {
+      return p.err !== null && inWin(p.pub);
+    });
+  }
+  function renderHero() {
+    var d = state.data;
+    var pts = heroPoints();
+    var o = jsSummarize(pts.map(function (p) { return p.err; }));
     var biasEl = document.getElementById("stat-bias");
     biasEl.textContent = fmtSigned(o.bias);
     biasEl.className = "stat-value " + (o.bias > 0 ? "pos" : "neg");
     document.getElementById("stat-opt").textContent = fmtShare(o.opt_share);
     document.getElementById("stat-pess").textContent = fmtShare(o.pess_share);
-    document.getElementById("stat-n").textContent = o.n;
-    document.getElementById("stat-period").textContent =
-      "prognoser fra " + fmtDate(parseDate(d.meta.first_pub)) + " til " +
-      fmtDate(parseDate(d.meta.last_pub));
+    document.getElementById("stat-n").textContent = o.n || "–";
+    var pubs = pts.map(function (p) { return p.pub; });
+    var pubMs = pubs.map(parseDate);
+    document.getElementById("stat-period").textContent = pubs.length
+      ? "prognoser fra " + fmtDate(Math.min.apply(null, pubMs)) +
+        " til " + fmtDate(Math.max.apply(null, pubMs))
+      : "ingen prognoser i perioden";
 
     var worst = null;
-    d.points.forEach(function (p) {
-      if (p.err === null) return;
+    pts.forEach(function (p) {
       if (!worst || Math.abs(p.err) > Math.abs(worst.err)) worst = p;
     });
     if (worst) {
@@ -154,8 +200,15 @@
   /* ---------- hovedgraf ---------- */
   function renderMain(d, p) {
     destroyChart("main");
-    var vints = vintagesFor(d, p);
+    var vints = vintagesFor(d, p).filter(function (v) { return inWin(v.pub); });
     if (!state.showAll) vints = vints.slice(-6);
+    if (!vints.length) {
+      setEmpty("main", true);
+      document.getElementById("chart-title").textContent =
+        d.labels[p] + " – alle prognoser mod facit (%)";
+      return;
+    }
+    setEmpty("main", false);
 
     var datasets = vints.map(function (v) {
       var anchor = anchorFor(d, p, v.pub);
@@ -196,7 +249,8 @@
       ds.data.forEach(function (pt) { allX.push(pt.x); });
     });
     var DAY = 86400000;
-    var xMin = Math.min.apply(null, allX) - 20 * DAY;
+    var ws = windowStart();
+    var xMin = ws ? parseDate(ws) : Math.min.apply(null, allX) - 20 * DAY;
     var xMax = Math.max.apply(null, allX.concat([Date.now()])) + 40 * DAY;
 
     var ctx = document.getElementById("chart-main");
@@ -238,10 +292,12 @@
     destroyChart("error");
     var colors = [], pts = [];
     d.points.forEach(function (pt) {
-      if (pt.p !== p || pt.err === null) return;
+      if (pt.p !== p || pt.err === null || !inWin(pt.pub)) return;
       pts.push({ x: parseDate(pt.target), y: pt.err, pub: pt.pub, fc: pt.fc, act: pt.act });
       colors.push(pt.err > 0 ? "rgba(192,57,43,.75)" : pt.err < 0 ? "rgba(30,125,70,.75)" : "rgba(120,120,120,.75)");
     });
+    if (!pts.length) { setEmpty("error", true); return; }
+    setEmpty("error", false);
     var ys = pts.map(function (q) { return q.y; });
     function niceFloor(v) { return Math.floor(v * 2) / 2; }
     function niceCeil(v) { return Math.ceil(v * 2) / 2; }
@@ -309,8 +365,17 @@
     destroyChart("horizon");
     var hs = ["3M", "6M", "9M", "12M"];
     var names = { "3M": "3 mdr", "6M": "6 mdr", "9M": "9 mdr", "12M": "12 mdr" };
-    var m = d.metrics[p] || {};
-    var vals = hs.map(function (h) { return (m[h] && m[h].n) ? m[h].bias : 0; });
+    var m = {};
+    hs.forEach(function (h) {
+      var errs = d.points
+        .filter(function (pt) { return pt.p === p && pt.h === h && pt.err !== null && inWin(pt.pub); })
+        .map(function (pt) { return pt.err; });
+      m[h] = jsSummarize(errs);
+    });
+    var hasData = hs.some(function (h) { return m[h].n > 0; });
+    if (!hasData) { setEmpty("horizon", true); return; }
+    setEmpty("horizon", false);
+    var vals = hs.map(function (h) { return m[h].n ? m[h].bias : 0; });
     var ctx = document.getElementById("chart-horizon");
     state.charts.horizon = new Chart(ctx, {
       type: "bar",
@@ -361,14 +426,20 @@
   }
 
   /* ---------- scoreboard ---------- */
-  function renderScore(d) {
+  function renderScore() {
+    var d = state.data;
     var h = document.getElementById("horizon-select").value;
     var tb = document.querySelector("#score-table tbody");
     tb.innerHTML = "";
     var hName = { alle: "alle horisonter", "3M": "3 mdr", "6M": "6 mdr",
                   "9M": "9 mdr", "12M": "12 mdr" }[h];
     d.order.forEach(function (p) {
-      var m = (d.metrics[p] || {})[h] || { n: 0 };
+      var m = jsSummarize(d.points
+        .filter(function (pt) {
+          return pt.p === p && pt.err !== null && inWin(pt.pub) &&
+                 (h === "alle" || pt.h === h);
+        })
+        .map(function (pt) { return pt.err; }));
       var tr = document.createElement("tr");
       var biasCls = m.bias === null || m.bias === undefined ? "" :
                     (m.bias > 0 ? "bias-pos" : m.bias < 0 ? "bias-neg" : "");
@@ -439,17 +510,123 @@
       if (cmp.mapping[bank][bp] === canon) prods.push(bp);
     });
     return d.points.filter(function (pt) {
-      return prods.indexOf(pt.p) !== -1 && pt.h === h && pt.err !== null;
+      return prods.indexOf(pt.p) !== -1 && pt.h === h && pt.err !== null && inWin(pt.pub);
     });
+  }
+
+  var CMP_MIN_N = 3, CMP_MIN_CELLS = 3;
+  var CMP_HORIZONS = ["3M", "6M", "9M", "12M"];
+
+  /* Genberegner hele sammenligningen ud fra punkter i det valgte vindue.
+     Spejler logikken i scraper/compare.py. */
+  function computeComparison() {
+    var cmp = state.cmp.comparison;
+    function r2(v) { return Math.round(v * 100) / 100; }
+
+    var cells = [], rankPts = {}, overall = {}, biasTable = {}, rdHits = {};
+    Object.keys(cmp.banks).forEach(function (b) { rankPts[b] = []; });
+    ["3M", "6M", "9M", "12M"].forEach(function (h) { rdHits[h] = []; });
+
+    // fejl pr. (kanonisk produkt, horisont, bank). Podie-overall bruger ALLE
+    // bankens prognoser (som dataset-overall), ikke kun sammenlignelige produkter.
+    var byCell = {};
+    Object.keys(cmp.banks).forEach(function (b) {
+      var d = state.cmp.bankData[b];
+      if (!d) return;
+      var map = cmp.mapping[b] || {};
+      var allErrs = [];
+      d.points.forEach(function (pt) {
+        if (pt.err === null || !inWin(pt.pub)) return;
+        allErrs.push(pt.err);
+        if (!map[pt.p] || CMP_HORIZONS.indexOf(pt.h) === -1) return;
+        var k = map[pt.p] + "|" + pt.h;
+        ((byCell[k] = byCell[k] || {})[b] = byCell[k][b] || []).push(pt.err);
+      });
+      overall[b] = jsSummarize(allErrs);
+      var pubs = d.points
+        .filter(function (pt) { return pt.err !== null && inWin(pt.pub); })
+        .map(function (pt) { return pt.pub; });
+      overall[b].period = pubs.length
+        ? [pubs.reduce(function (a, x) { return a < x ? a : x; }),
+           pubs.reduce(function (a, x) { return a > x ? a : x; })] : [null, null];
+    });
+
+    Object.keys(byCell).sort().forEach(function (k) {
+      var parts = k.split("|");
+      var eligible = Object.keys(byCell[k]).filter(function (b) {
+        return byCell[k][b].length >= CMP_MIN_N;
+      });
+      if (eligible.length < 2) return;
+      var stats = {};
+      eligible.forEach(function (b) { stats[b] = jsSummarize(byCell[k][b]); });
+      var ranking = eligible.slice().sort(function (a, b) {
+        return stats[a].mae - stats[b].mae;
+      });
+      ranking.forEach(function (b, i) { rankPts[b].push(i + 1); });
+      cells.push({ product: parts[0], horizon: parts[1], banks: stats, ranking: ranking });
+    });
+
+    var championship = Object.keys(rankPts)
+      .filter(function (b) { return rankPts[b].length >= CMP_MIN_CELLS; })
+      .map(function (b) {
+        var rp = rankPts[b];
+        var mean = rp.reduce(function (a, x) { return a + x; }, 0) / rp.length;
+        return { bank: b, mean_rank: r2(mean), cells: rp.length,
+                 wins: rp.filter(function (r) { return r === 1; }).length };
+      })
+      .sort(function (a, b) {
+        return a.mean_rank - b.mean_rank || b.wins - a.wins;
+      });
+
+    // samlet bias over F3+F5
+    Object.keys(cmp.banks).forEach(function (b) {
+      var d = state.cmp.bankData[b];
+      if (!d) { biasTable[b] = jsSummarize([]); biasTable[b].period = [null, null]; return; }
+      var map = cmp.mapping[b] || {};
+      var errs = [], pubs = [];
+      d.points.forEach(function (pt) {
+        if (pt.err === null || !inWin(pt.pub)) return;
+        var c = map[pt.p];
+        if ((c === "F3" || c === "F5") && CMP_HORIZONS.indexOf(pt.h) !== -1) {
+          errs.push(pt.err); pubs.push(pt.pub);
+        }
+      });
+      biasTable[b] = jsSummarize(errs);
+      biasTable[b].period = pubs.length
+        ? [pubs.reduce(function (a, x) { return a < x ? a : x; }),
+           pubs.reduce(function (a, x) { return a > x ? a : x; })] : [null, null];
+    });
+
+    // RD hit-rate
+    var rdd = state.cmp.bankData.rd;
+    if (rdd) {
+      rdd.points.forEach(function (pt) {
+        if ((pt.p === "f1" || pt.p === "f3" || pt.p === "f5") && pt.hit !== null &&
+            pt.hit !== undefined && inWin(pt.pub) && rdHits[pt.h]) {
+          rdHits[pt.h].push(pt.hit);
+        }
+      });
+    }
+    var rdHitrate = {};
+    Object.keys(rdHits).forEach(function (h) {
+      if (rdHits[h].length) {
+        var nHit = rdHits[h].filter(function (x) { return x; }).length;
+        rdHitrate[h] = { n: rdHits[h].length, hit_rate: r2(nHit / rdHits[h].length) };
+      }
+    });
+
+    return { cells: cells, championship: championship, biasTable: biasTable,
+             rdHitrate: rdHitrate, overall: overall };
   }
 
   function renderChamp() {
     var cmp = state.cmp.comparison;
+    var cc = computeComparison();
     var tb = document.querySelector("#champ-table tbody");
     tb.innerHTML = "";
-    cmp.championship.forEach(function (c, i) {
+    cc.championship.forEach(function (c, i) {
       var b = c.bank;
-      var bias = cmp.bias_table[b] || {};
+      var bias = cc.biasTable[b] || {};
       var tr = document.createElement("tr");
       var period = bias.period && bias.period[0]
         ? fmtDate(parseDate(bias.period[0])) + " – " + fmtDate(parseDate(bias.period[1])) : "–";
@@ -468,19 +645,19 @@
       tb.appendChild(tr);
     });
     var missing = Object.keys(cmp.banks).filter(function (b) {
-      return !cmp.championship.some(function (c) { return c.bank === b; });
+      return !cc.championship.some(function (c) { return c.bank === b; });
     }).map(function (b) { return cmp.banks[b].label; });
-    var lead = cmp.championship.length ? cmp.banks[cmp.championship[0].bank].label : "–";
+    var lead = cc.championship.length ? cmp.banks[cc.championship[0].bank].label : "–";
     document.getElementById("champ-explain").textContent =
-      "Mesterskabet dækker " + cmp.cells.length + " discipliner (produkt × horisont, " +
+      "Mesterskabet dækker " + cc.cells.length + " discipliner (produkt × horisont, " +
       "min. 2 banker). " + lead + " fører." +
-      (missing.length ? " Uden for mesterskabet (for kort historik): " + missing.join(", ") + "." : "");
+      (missing.length ? " Uden for mesterskabet (for få data i perioden): " + missing.join(", ") + "." : "");
   }
 
   function buildCmpProducts() {
     var cmp = state.cmp.comparison;
     var seen = {};
-    cmp.cells.forEach(function (c) { seen[c.product] = true; });
+    computeComparison().cells.forEach(function (c) { seen[c.product] = true; });
     var sel = document.getElementById("cmp-product");
     sel.innerHTML = "";
     Object.keys(seen).sort().forEach(function (p) {
@@ -517,6 +694,8 @@
     });
     var ys = [];
     datasets.forEach(function (ds) { ds.data.forEach(function (q) { ys.push(q.y); }); });
+    if (!datasets.length) { setEmpty("compare", true); return; }
+    setEmpty("compare", false);
     function niceFloor(v) { return Math.floor(v * 2) / 2; }
     function niceCeil(v) { return Math.ceil(v * 2) / 2; }
     var DAY = 86400000;
@@ -578,7 +757,7 @@
     var cmp = state.cmp.comparison;
     var P = state.cmp.product, H = state.cmp.horizon;
     var cell = null;
-    cmp.cells.forEach(function (c) {
+    computeComparison().cells.forEach(function (c) {
       if (c.product === P && c.horizon === H) cell = c;
     });
     var hName = { "3M": "3 mdr.", "6M": "6 mdr.", "9M": "9 mdr.", "12M": "12 mdr." }[H];
@@ -612,10 +791,13 @@
   function renderHitrate() {
     destroyChart("hitrate");
     var cmp = state.cmp.comparison;
+    var rdHitrate = computeComparison().rdHitrate;
     var order = { "3M": 0, "6M": 1, "9M": 2, "12M": 3 };
-    var hs = Object.keys(cmp.rd_hitrate).sort(function (a, b) {
+    var hs = Object.keys(rdHitrate).sort(function (a, b) {
       return (order[a] === undefined ? 9 : order[a]) - (order[b] === undefined ? 9 : order[b]);
     });
+    if (!hs.length) { setEmpty("hitrate", true); return; }
+    setEmpty("hitrate", false);
     var hName = { "3M": "3 mdr.", "6M": "6 mdr.", "9M": "9 mdr.", "12M": "12 mdr." };
     var ctx = document.getElementById("chart-hitrate");
     state.charts.hitrate = new Chart(ctx, {
@@ -624,7 +806,7 @@
         labels: hs.map(function (h) { return hName[h] || h; }),
         datasets: [{
           label: "Hit-rate",
-          data: hs.map(function (h) { return Math.round(cmp.rd_hitrate[h].hit_rate * 100); }),
+          data: hs.map(function (h) { return Math.round(rdHitrate[h].hit_rate * 100); }),
           backgroundColor: "rgba(30,125,70,.8)"
         }]
       },
@@ -637,7 +819,7 @@
             callbacks: {
               label: function (item) {
                 var h = hs[item.dataIndex];
-                return item.parsed.y + " % ramt (n=" + cmp.rd_hitrate[h].n + ")";
+                return item.parsed.y + " % ramt (n=" + rdHitrate[h].n + ")";
               }
             }
           }
@@ -652,8 +834,64 @@
   }
 
   function renderCompareAll() {
+    buildCmpProducts();
     renderCompareChart();
     renderCellTable();
+  }
+
+  /* ---------- periode-filter ---------- */
+  function computeOverlapStart() {
+    var starts = [];
+    Object.keys(state.cmp.bankData).forEach(function (b) {
+      var pubs = state.cmp.bankData[b].points
+        .filter(function (pt) { return pt.err !== null; })
+        .map(function (pt) { return pt.pub; });
+      if (pubs.length) {
+        starts.push(pubs.reduce(function (a, x) { return a < x ? a : x; }));
+      }
+    });
+    state.overlapStart = starts.length
+      ? starts.reduce(function (a, x) { return a > x ? a : x; }) : null;
+  }
+
+  function updatePeriodLabel() {
+    var el = document.getElementById("period-window");
+    if (!el) return;
+    var s = windowStart();
+    if (!s) { el.textContent = "Viser alle prognoser."; return; }
+    var txt = "Viser prognoser spået efter " + fmtDateFull(parseDate(s));
+    if (state.period === "overlap") txt += " (fælles start for alle banker)";
+    el.textContent = txt + ".";
+  }
+
+  function renderAll() {
+    updatePeriodLabel();
+    renderHero();
+    renderProduct();
+    renderScore();
+    renderPodium();
+    renderChamp();
+    renderCompareAll();
+    renderHitrate();
+  }
+
+  function wirePeriodPicker() {
+    var btns = document.querySelectorAll(".period-picker button");
+    function sync() {
+      for (var j = 0; j < btns.length; j++) {
+        btns[j].className =
+          btns[j].getAttribute("data-period") === state.period ? "active" : "";
+      }
+      updatePeriodLabel();
+    }
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener("click", function () {
+        state.period = this.getAttribute("data-period");
+        sync();
+        renderAll();
+      });
+    }
+    sync();
   }
 
   /* ---------- bankvælger + skam-skammel ---------- */
@@ -688,10 +926,10 @@
     document.getElementById("bank-name-score").textContent =
       state.cmp.comparison.banks[b].label;
     document.getElementById("dl-json").href = bankPath(b);
-    renderHero(state.data);
+    renderHero();
     renderTabs(state.data);
     renderProduct();
-    renderScore(state.data);
+    renderScore();
     var btns = document.querySelectorAll(".bank-picker button");
     var keys = Object.keys(state.cmp.comparison.banks);
     for (var i = 0; i < btns.length; i++) {
@@ -706,13 +944,14 @@
 
   function renderPodium() {
     var cmp = state.cmp.comparison;
-    var excluded = Object.keys(cmp.overall).filter(function (b) {
-      var o = cmp.overall[b];
+    var overall = computeComparison().overall;
+    var excluded = Object.keys(overall).filter(function (b) {
+      var o = overall[b];
       return o.mae === null || (o.n || 0) < PODIUM_MIN_N;
     });
-    var ranked = Object.keys(cmp.overall)
+    var ranked = Object.keys(overall)
       .filter(function (b) { return excluded.indexOf(b) === -1; })
-      .sort(function (a, b) { return cmp.overall[b].mae - cmp.overall[a].mae; })
+      .sort(function (a, b) { return overall[b].mae - overall[a].mae; })
       .slice(0, 3);
     var note = "Skammelen måler den rene gennemsnitsfejl (MAE) på alle prognoser " +
       "med facit (min. " + PODIUM_MIN_N + " stk.). " +
@@ -732,9 +971,9 @@
     if (ranked.length < 3) return;
     var order = [ranked[1], ranked[0], ranked[2]];
     var cls = ["second", "first", "third"];
-    var maxMae = cmp.overall[ranked[0]].mae;
+    var maxMae = overall[ranked[0]].mae;
     order.forEach(function (b, i) {
-      var o = cmp.overall[b];
+      var o = overall[b];
       var step = document.createElement("div");
       step.className = "podium-step " + cls[i];
       var period = o.period && o.period[0]
@@ -769,6 +1008,7 @@
         }));
       })
       .then(function () {
+        computeOverlapStart();
         renderChamp();
         buildBankPicker();
         renderPodium();
@@ -798,12 +1038,13 @@
       .then(function (d) {
         state.data = d;
         state.product = (d.order.indexOf("f5") !== -1) ? "f5" : d.order[0];
-        renderHero(d);
+        renderHero();
         renderTabs(d);
         renderProduct();
-        renderScore(d);
+        renderScore();
+        wirePeriodPicker();
         document.getElementById("horizon-select").addEventListener("change", function () {
-          renderScore(state.data);
+          renderScore();
         });
         document.getElementById("toggle-all").addEventListener("change", function (e) {
           state.showAll = e.target.checked;

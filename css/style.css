@@ -104,6 +104,24 @@ body {
 .podium-note { color: #a8a8a8; font-size: .88rem; margin-top: 18px; }
 .podium-note a { color: #9ec5f0; }
 
+/* periode-vælger */
+.period-picker { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+.period-label { color: #dbe6f5; font-weight: 700; font-size: .9rem; }
+.period-picker button {
+  border: 1px solid rgba(255,255,255,.35); background: transparent;
+  color: #fff; border-radius: 999px; padding: 6px 14px;
+  font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.period-picker button:hover { background: rgba(255,255,255,.14); }
+.period-picker button.active { background: #fff; color: #0f2c52; border-color: #fff; }
+.period-window { color: #b9c8e0; font-size: .85rem; }
+
+.chart-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: .95rem; margin: 0;
+}
+.chart-empty[hidden] { display: none; }
+
 /* optimisme-meter */
 .meter-block { margin-top: 30px; max-width: 720px; }
 .meter-title { font-weight: 700; margin-bottom: 8px; }
