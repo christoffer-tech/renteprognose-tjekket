@@ -1,0 +1,143 @@
+{
+ "source": "wayback",
+ "capture": "20241217200524",
+ "pub_date": "2024-12-12",
+ "recalc_date": null,
+ "targets": [
+  null,
+  "2025-03-31",
+  "2025-06-30",
+  "2025-09-30",
+  "2025-12-30"
+ ],
+ "rows": {
+  "cita3": {
+   "name": "CITA3 (indgår i rente på prioritetslån)",
+   "aktuelt": 2.6,
+   "forecasts": [
+    1.9,
+    1.5,
+    1.6,
+    1.6
+   ]
+  },
+  "cita6": {
+   "name": "F-kort (CITA6 og rentetillæg på 0,45%)",
+   "aktuelt": 3.9,
+   "forecasts": [
+    2.7,
+    2.0,
+    2.0,
+    2.1
+   ]
+  },
+  "f1": {
+   "name": "F1",
+   "aktuelt": 2.4,
+   "forecasts": [
+    2.2,
+    2.0,
+    2.1,
+    2.1
+   ]
+  },
+  "f3": {
+   "name": "F3",
+   "aktuelt": 2.1,
+   "forecasts": [
+    2.1,
+    2.1,
+    2.1,
+    2.1
+   ]
+  },
+  "f5": {
+   "name": "F5",
+   "aktuelt": 2.2,
+   "forecasts": [
+    2.3,
+    2.2,
+    2.3,
+    2.3
+   ]
+  },
+  "fast20": {
+   "name": "Fast rente 20 år (3.5%-lån)",
+   "aktuelt": 3.7,
+   "forecasts": [
+    3.7,
+    3.7,
+    3.7,
+    3.7
+   ]
+  },
+  "fast30": {
+   "name": "Fast rente 30 år (3.5%-lån)",
+   "aktuelt": 3.7,
+   "forecasts": [
+    3.7,
+    3.7,
+    3.7,
+    3.7
+   ]
+  }
+ },
+ "raw_rows": {
+  "CITA3 (indgår i rente på prioritetslån)": [
+   2.6,
+   1.9,
+   1.5,
+   1.6,
+   1.6
+  ],
+  "CITA6 (indgår i rente på F-kort)": [
+   2.3,
+   1.7,
+   1.5,
+   1.6,
+   1.6
+  ],
+  "F-kort (CITA6 og rentetillæg på 0,45%)": [
+   3.9,
+   2.7,
+   2.0,
+   2.0,
+   2.1
+  ],
+  "F1": [
+   2.4,
+   2.2,
+   2.0,
+   2.1,
+   2.1
+  ],
+  "F3": [
+   2.1,
+   2.1,
+   2.1,
+   2.1,
+   2.1
+  ],
+  "F5": [
+   2.2,
+   2.3,
+   2.2,
+   2.3,
+   2.3
+  ],
+  "Fast rente 20 år (3.5%-lån)": [
+   3.7,
+   3.7,
+   3.7,
+   3.7,
+   3.7
+  ],
+  "Fast rente 30 år (3.5%-lån)": [
+   3.7,
+   3.7,
+   3.7,
+   3.7,
+   3.7
+  ]
+ }
+}

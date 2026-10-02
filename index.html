@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Renteprognose-tjekket – Hvor præcise er Nykredits renteprognoser?</title>
+<meta name="description" content="Uafhængig tracking af Nykredits renteprognoser: sammenligner hver prognose med det faktiske renteniveau og visualiserer træfsikkerheden.">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="js/app.js" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">Renteprognose-tjekket</div>
+    <nav>
+      <a href="#overblik">Overblik</a>
+      <a href="#produkter">Prognoser vs. facit</a>
+      <a href="#scoreboard">Scoreboard</a>
+      <a href="#metode">Metode &amp; data</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HERO / OVERBLIK -->
+  <section id="overblik" class="hero">
+    <div class="wrap">
+      <h1>Hvor præcise er Nykredits renteprognoser?</h1>
+      <p class="lede">
+        Nykredit opdaterer løbende deres renteprognose for de kommende 12 måneder.
+        Her tracker vi <strong>hver eneste prognose siden 2020</strong> og sammenligner den
+        med det renteniveau, der faktisk indtraf – så du selv kan se, hvor godt de rammer.
+      </p>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-value" id="stat-bias">–</div>
+          <div class="stat-label">Gennemsnitlig fejl (alle renter)</div>
+          <div class="stat-sub">positiv = renten blev <em>højere</em> end spået</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-opt">–</div>
+          <div class="stat-label">Andel af prognoser der var for optimistiske</div>
+          <div class="stat-sub">dvs. den spåede rente lå under facit</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-n">–</div>
+          <div class="stat-label">Prognoser med facit</div>
+          <div class="stat-sub" id="stat-period">–</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-worst">–</div>
+          <div class="stat-label">Største fejlskud</div>
+          <div class="stat-sub" id="stat-worst-sub">–</div>
+        </div>
+      </div>
+      <div class="meter-block">
+        <div class="meter-title">Optimisme-meteret <span class="meter-hint">– hvor ligger den gennemsnitlige fejl?</span></div>
+        <div class="meter">
+          <div class="meter-zone left"><span>For pessimistiske</span></div>
+          <div class="meter-zone right"><span>For optimistiske</span></div>
+          <div class="meter-marker" id="meter-marker"></div>
+        </div>
+        <div class="meter-scale"><span>−1 pp</span><span>0</span><span>+1 pp</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUKT-GRAFER -->
+  <section id="produkter" class="section">
+    <div class="wrap">
+      <h2>Prognose mod facit</h2>
+      <p class="section-intro">
+        Den <strong>sorte linje</strong> er den faktiske rente. Hver <strong>tynd linje</strong>
+        er én prognose fra en given dato – den starter ved det dengang aktuelle niveau
+        og viser, hvor renten blev spået hen. Hold musen over linjerne for at se datoen.
+        Prognoser der rækker ud i fremtiden har endnu ikke fået facit.
+      </p>
+      <div class="tabs" id="product-tabs" role="tablist"></div>
+      <div class="chart-controls">
+        <label><input type="checkbox" id="toggle-all" checked> Vis alle historiske prognoser</label>
+        <span class="chart-hint">(fjern fluebenet for kun at se de seneste 6)</span>
+      </div>
+      <div class="chart-card">
+        <h3 id="chart-title">–</h3>
+        <div class="chart-box"><canvas id="chart-main"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Prognosefejlen over tid <span class="h3-sub">– facit minus prognose, i procentpoint</span></h3>
+        <p class="chart-explain">
+          Hver prik er én prognose, placeret ved den dato den Pegede på.
+          <strong class="up">Prikker over nul = for optimistisk</strong> (renten endte højere end spået).
+          <strong class="down">Prikker under nul = for pessimistisk.</strong>
+        </p>
+        <div class="chart-box"><canvas id="chart-error"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Fejl pr. horisont <span class="h3-sub">– rammer de bedre på kort eller lang sigt?</span></h3>
+        <div class="chart-box chart-box-sm"><canvas id="chart-horizon"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCOREBOARD -->
+  <section id="scoreboard" class="section section-alt">
+    <div class="wrap">
+      <h2>Scoreboard</h2>
+      <p class="section-intro">
+        Gennemsnitlig fejl (bias), middel absolut fejl (MAE) og andelen af for optimistiske
+        prognoser – pr. lånetype og pr. horisont. Alt i procentpoint.
+      </p>
+      <label class="horizon-label">Horisont:
+        <select id="horizon-select">
+          <option value="alle">Alle horisonter</option>
+          <option value="3M">3 måneder</option>
+          <option value="6M">6 måneder</option>
+          <option value="9M">9 måneder</option>
+          <option value="12M">12 måneder</option>
+        </select>
+      </label>
+      <div class="table-scroll">
+        <table id="score-table">
+          <thead>
+            <tr><th>Lånetype</th><th>Antal</th><th>Gns. fejl (bias)</th>
+                <th>Middel absolut fejl</th><th>Andel for optimistiske</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="table-note" id="score-note"></p>
+    </div>
+  </section>
+
+  <!-- METODE -->
+  <section id="metode" class="section">
+    <div class="wrap narrow">
+      <h2>Metode &amp; data</h2>
+      <h3>Hvor kommer prognoserne fra?</h3>
+      <p>
+        Prognosetabellen hentes fra Nykredits side om renteprognosen. Historiske prognoser
+        (2020–2026) er genskabt fra arkiverede kopi­er af siden via
+        <a href="https://web.archive.org" rel="noopener">Wayback Machine</a> (Internet Archive).
+        Fremadrettet hentes den aktuelle prognose automatisk én gang om ugen, så nye
+        prognoser løbende kommer med.
+      </p>
+      <h3>Hvad sammenlignes der med?</h3>
+      <p>
+        Som <em>facit</em> bruges tabellens egen <em>Aktuelt</em>-kolonne fra det snapshot,
+        der ligger tættest på måldatoen (typisk få ugers afstand, maks. 60 dage).
+        Det sikrer, at prognose og facit bruger <strong>præcis samme rentedefinition</strong>
+        – fx er F1/F3/F5 kontantlånsrenter inkl. kursfradrag, og F-kort er CITA6 plus
+        rentetillæg. Til gengæld er facit månedsøjebliksbilleder, ikke dagskurser.
+      </p>
+      <h3>Hvad betyder "for optimistisk"?</h3>
+      <p>
+        Set fra låntagers synspunkt er en lav rente god. En prognose kaldes her
+        <em>for optimistisk</em>, når den spåede rente lå <strong>under</strong> det
+        faktiske niveau (positiv fejl = facit − prognose). Renterne er afrundet til
+        én decimal, præcis som Nykredit selv afrunder dem.
+      </p>
+      <h3>Forbehold</h3>
+      <ul>
+        <li>Produktsortimentet har ændret sig over tid: CITA-rækkerne og F-kort kom til
+          senere, og kuponen på de faste lån er skiftet (fx 3 % → 4 %). Det fremgår af rådataene.</li>
+        <li>Tidsskrift-arkiveringen er ikke komplet – der kan mangle enkelte måneder.</li>
+        <li>Dette er et uafhængigt hobbyprojekt uden tilknytning til Nykredit.
+          Intet her er investerings- eller lånerådgivning.</li>
+      </ul>
+      <h3>Hent dataene</h3>
+      <p>
+        Alle tal på siden kan hentes frit – byg gerne videre på dem:
+      </p>
+      <p class="downloads">
+        <button id="dl-csv" type="button">Download CSV (alle prognoser + facit)</button>
+        <a id="dl-json" href="data/dataset.json" download>dataset.json</a>
+      </p>
+      <p class="updated">Sidst opdateret: <span id="last-updated">–</span></p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Renteprognose-tjekket – et uafhængigt projekt. Data: Nykredit + Internet Archive.
+       Intet på siden er rådgivning.</p>
+  </div>
+</footer>
+
+</body>
+</html>

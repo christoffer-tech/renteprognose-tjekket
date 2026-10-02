@@ -1,0 +1,39 @@
+name: Opdater renteprognose-data
+
+# Henter den aktuelle prognose fra Nykredit én gang om ugen,
+# genbygger dataset.json og committer ændringerne, så
+# GitHub Pages-siden altid viser friske tal.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # mandage kl. 06:00 UTC
+  workflow_dispatch: # tillad manuel kørsel fra GitHub UI'et
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer afhængigheder
+        run: pip install -r scraper/requirements.txt
+
+      - name: Hent aktuel prognose
+        run: python scraper/scrape.py update
+
+      - name: Genbyg datasæt
+        run: python scraper/build.py
+
+      - name: Commit nye data (hvis ændret)
+        run: |
+          git config user.name "renteprognose-bot"
+          git config user.email "renteprognose-bot@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "Auto-opdatering af prognosedata"
+          git push
