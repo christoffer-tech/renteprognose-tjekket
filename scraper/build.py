@@ -182,6 +182,20 @@ def main() -> None:
         "overall": overall,
     }
     out = DATA_DIR / "dataset.json"
+    if out.exists():
+        try:
+            old = json.loads(out.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            old = None
+        if old is not None:
+            def comparable(d: dict) -> dict:
+                meta = {k: v for k, v in d.get("meta", {}).items()
+                        if k != "generated"}
+                return {"meta": meta,
+                        **{k: v for k, v in d.items() if k != "meta"}}
+            if comparable(old) == comparable(dataset):
+                print("Ingen ændringer i datasættet - dataset.json opdateres ikke")
+                return
     out.write_text(json.dumps(dataset, ensure_ascii=False), encoding="utf-8")
     print(f"Skrev {out} ({len(points)} punkter, "
           f"{sum(1 for x in points if x['err'] is not None)} med facit)")
