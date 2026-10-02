@@ -190,6 +190,20 @@ def main() -> None:
         "level_adjust": LEVEL_ADJUST,
     }
     out = ROOT / "data" / "comparison.json"
+    if out.exists():
+        try:
+            old = json.loads(out.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            old = None
+        if old is not None:
+            def comparable(d: dict) -> dict:
+                meta = {k: v for k, v in d.get("meta", {}).items()
+                        if k != "generated"}
+                return {"meta": meta,
+                        **{k: v for k, v in d.items() if k != "meta"}}
+            if comparable(old) == comparable(comparison):
+                print("Ingen ændringer - comparison.json opdateres ikke")
+                return
     out.write_text(json.dumps(comparison, ensure_ascii=False), encoding="utf-8")
     print(f"Skrev {out}: {len(cells)} celler, "
           f"{len(championship)} banker i mesterskabet")

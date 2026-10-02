@@ -123,9 +123,11 @@ def cmd_facit_rd() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists():
         old = json.loads(out.read_text(encoding="utf-8"))
-        # flet: behold alt, overskriv aldrig historik med nyere scrape
+        # flet: behold alt, overskriv aldrig historik med nyere scrape.
+        # NB: sorter nøgler for deterministisk output (set-rækkefølge er
+        # ikke stabil på tværs af kørsler og gav ellers tomme diff-commits).
         merged = {}
-        for k in set(old) | set(series):
+        for k in sorted(set(old) | set(series)):
             by_date = {d: v for d, v in old.get(k, [])}
             for dd, vv in series.get(k, []):
                 by_date.setdefault(dd, vv)
