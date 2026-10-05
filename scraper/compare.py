@@ -2,7 +2,9 @@
 
 Kanoniske sammenligningsprodukter (samme markedsrente på tværs af banker):
 - F3, F5  : alle 5 banker
-- F1      : alle undtagen Sydbank
+- F1      : alle banker (Sydbank kun via refinansieringsartikler -
+            de har ingen F1-række i tabellen og dermed ingen F1-facit
+            endnu, så cellen er tom indtil F1-facit findes)
 - FKORT   : Nykredit F-kort, RD FlexKort, Sydbank F-kort
             (Nordeas 'Kort Rente' er CITA6 uden tillæg -> CITA6 i stedet)
 - CITA3   : Nykredit, Sydbank (Cita3M)
@@ -58,8 +60,8 @@ CANONICAL_MAP = {
                  "cita3": "CITA3", "fast30": "FAST30"},
     "nordea": {"f1": "F1", "f3": "F3", "f5": "F5", "cita6": "CITA6",
                "cibor3": "CIBOR3", "fast30": "FAST30"},
-    "sydbank": {"f3": "F3", "f5": "F5", "fkort": "FKORT", "cita3": "CITA3",
-                "cibor3": "CIBOR3", "fast30": "FAST30"},
+    "sydbank": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT", "cita3": "CITA3",
+                 "cibor3": "CIBOR3", "fast30": "FAST30"},
     "jyske": {"f1": "F1", "f3": "F3", "f5": "F5"},
     "rd": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT"},
     "sparkron": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT",

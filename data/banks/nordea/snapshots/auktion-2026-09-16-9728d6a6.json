@@ -11,7 +11,7 @@
  "rows": {
   "f1": {
    "name": "Rentetilpasningslån F1",
-   "aktuelt": 2.33,
+   "aktuelt": null,
    "forecasts": [
     3.1
    ],
@@ -21,7 +21,7 @@
   },
   "f3": {
    "name": "Rentetilpasningslån F3",
-   "aktuelt": 3.5,
+   "aktuelt": null,
    "forecasts": [
     3.1
    ],
@@ -31,7 +31,7 @@
   },
   "f5": {
    "name": "Rentetilpasningslån F5",
-   "aktuelt": 0.16,
+   "aktuelt": null,
    "forecasts": [
     3.2
    ],
@@ -42,15 +42,15 @@
  },
  "raw_rows": {
   "Rentetilpasningslån F1": [
-   2.33,
+   null,
    3.1
   ],
   "Rentetilpasningslån F3": [
-   3.5,
+   null,
    3.1
   ],
   "Rentetilpasningslån F5": [
-   0.16,
+   null,
    3.2
   ]
  },

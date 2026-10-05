@@ -38,7 +38,11 @@ def canonical_product(name: str) -> str | None:
         return "f3"
     if re.search(r"\bf5\b", n):
         return "f5"
-    # gammel side (2007-2019): '3 års realkreditrente' = 3-års obligation
+    # gammel side (2007-2019): '3 års realkreditrente' var en KORT rente
+    # (niveauer omkring nul/negative i 2015-2016, som CIBOR - ikke som
+    # 3-årige renter) og mappes derfor til fkort. Det er et ANDET produkt
+    # end PDF'ernes '3-års realkreditrente (januar 20XX)', som har sin egen
+    # F-kort-række ved siden af og mapper til f3 (se banks/sydbank_pdf.py).
     if re.match(r"3[\s-]*(?:års|ars|aar)\s*realkreditrente", n):
         return "fkort"
     if "30" in n and "realkreditrente" in n:

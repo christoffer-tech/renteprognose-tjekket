@@ -1,9 +1,13 @@
 """Nordea auktions-prognoser (nordea.com/da/nyhed/forventninger-til-f1-...).
 
 Hver artikel giver een prognose pr. produkt (F1/F3/F5) for den kommende
-refinansiering (1. januar / 1. april / 1. oktober) inkl. 'rente i dag'
-(facit-definition, samme kontantlaansrente efter kursfradrag som
-hovedtabellen i banks/nordea.py).
+refinansiering (1. januar / 1. april / 1. oktober).
+
+VIGTIGT: artiklens 'rente i dag' er renten paa laantagerens EKSISTERENDE
+laan (fastsat for 1/3/5 aar siden, fx -0,16 % for F5 i 2025) - IKKE den
+aktuelle markedsrente. Den gemmes derfor IKKE som Aktuelt (ville forgifte
+facit-serien); snapshots herfra er prognose-only og faar facit fra
+hovedtabellens Aktuelt-serie i build.py.
 
 Serien gaar mindst tilbage til 2025 (verificeret) og opdages via
 nordea.com-sitemap'et, saa nye artikler kommer med automatisk.
@@ -73,19 +77,19 @@ def parse_article(html: str, url: str, source: str,
     names = {"f1": "Rentetilpasningslån F1", "f3": "Rentetilpasningslån F3",
              "f5": "Rentetilpasningslån F5"}
     for key in ("f1", "f3", "f5"):
-        # 'F1-rente: 2,2 pct. (rente i dag: 2,54 pct.)'
+        # 'F1-rente: 2,2 pct. (rente i dag: 2,54 pct.)' - kun prognosen
+        # bruges; 'rente i dag' er det eksisterende laans gamle rente.
         rx = re.compile(re.escape(key.upper()) + r"-rente:\s*"
-                        r"(-?[\d,.\s]+)\s*pct\.\s*\(rente i dag:\s*"
                         r"(-?[\d,.\s]+)\s*pct\.", re.IGNORECASE)
         mm = rx.search(txt)
         if not mm:
             continue
-        fc, act = _rate(mm.group(1) + " %"), _rate(mm.group(2) + " %")
+        fc = _rate(mm.group(1) + " %")
         if fc is None:
             continue
-        rows[key] = {"name": names[key], "aktuelt": act, "forecasts": [fc],
+        rows[key] = {"name": names[key], "aktuelt": None, "forecasts": [fc],
                      "targets": [target]}
-        raw_rows[names[key]] = [act, fc]
+        raw_rows[names[key]] = [None, fc]
 
     if not rows:
         return None
