@@ -1,0 +1,58 @@
+{
+ "bank": "nordea",
+ "source": "live-auktion",
+ "capture": null,
+ "obs_date": "2025-12-01",
+ "pub_date": "2025-12-01",
+ "recalc_date": null,
+ "targets": [
+  "2026-04-01"
+ ],
+ "rows": {
+  "f1": {
+   "name": "Rentetilpasningslån F1",
+   "aktuelt": 2.41,
+   "forecasts": [
+    2.2
+   ],
+   "targets": [
+    "2026-04-01"
+   ]
+  },
+  "f3": {
+   "name": "Rentetilpasningslån F3",
+   "aktuelt": 3.28,
+   "forecasts": [
+    2.3
+   ],
+   "targets": [
+    "2026-04-01"
+   ]
+  },
+  "f5": {
+   "name": "Rentetilpasningslån F5",
+   "aktuelt": -0.16,
+   "forecasts": [
+    2.6
+   ],
+   "targets": [
+    "2026-04-01"
+   ]
+  }
+ },
+ "raw_rows": {
+  "Rentetilpasningslån F1": [
+   2.41,
+   2.2
+  ],
+  "Rentetilpasningslån F3": [
+   3.28,
+   2.3
+  ],
+  "Rentetilpasningslån F5": [
+   -0.16,
+   2.6
+  ]
+ },
+ "article_url": "https://www.nordea.com/da/nyhed/forventninger-til-f1-f3-og-f5-renten-1.-april-2026"
+}

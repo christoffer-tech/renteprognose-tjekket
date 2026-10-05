@@ -10,6 +10,7 @@ for bank, pattern in [
     ("sydbank", "data/banks/sydbank/snapshots/*.json"),
     ("jyske", "data/banks/jyske/snapshots/*.json"),
     ("rd", "data/banks/rd/snapshots/*.json"),
+    ("sparkron", "data/banks/sparkron/snapshots/*.json"),
 ]:
     print("=" * 25, bank)
     for f in sorted(glob.glob(pattern)):
@@ -28,6 +29,7 @@ for bank, path in [
     ("sydbank", "data/banks/sydbank/dataset.json"),
     ("jyske", "data/banks/jyske/dataset.json"),
     ("rd", "data/banks/rd/dataset.json"),
+    ("sparkron", "data/banks/sparkron/dataset.json"),
 ]:
     d = json.load(open(path, encoding="utf-8"))
     o = d["overall"]

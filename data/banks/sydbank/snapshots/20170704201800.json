@@ -1,0 +1,32 @@
+{
+ "bank": "sydbank",
+ "source": "wayback",
+ "capture": "20170704201800",
+ "obs_date": "2017-07-04",
+ "pub_date": "2017-07-04",
+ "recalc_date": null,
+ "targets": [
+  "2017-10-04",
+  "2018-01-04",
+  "2018-07-04"
+ ],
+ "rows": {
+  "fkort": {
+   "name": "F-kort (juli 2019)",
+   "aktuelt": 0.21,
+   "forecasts": [
+    0.25,
+    0.25,
+    0.35
+   ]
+  }
+ },
+ "raw_rows": {
+  "F-kort (juli 2019)": [
+   0.21,
+   0.25,
+   0.25,
+   0.35
+  ]
+ }
+}

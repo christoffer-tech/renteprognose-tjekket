@@ -1,3 +1,4 @@
 requests
 beautifulsoup4
 lxml
+pdfplumber  # Sydbank renteforventnings-PDF'er (banks/sydbank_pdf.py)

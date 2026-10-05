@@ -90,7 +90,7 @@ def parse_dk_date(text: str) -> str | None:
             return dt.date(y, mo, d).isoformat()
         except ValueError:
             return None
-    m = re.search(r"(\d{1,2})\.\s*([a-zæøå]+)\s*(\d{4})", t, re.IGNORECASE)
+    m = re.search(r"(\d{1,2})\.\s*([a-zæøå]+)\.?\s*(\d{4})", t, re.IGNORECASE)
     if m:
         month = DK_MONTHS.get(m.group(2).lower())
         if month is None:
@@ -135,16 +135,23 @@ def snapshot_fingerprint(snap: dict) -> str:
     return json.dumps(core, sort_keys=True)
 
 
-def list_captures(page_url: str, since: str = "2020") -> list[dict]:
-    """List unikke Wayback-captures (collapse på digest) for en side-URL."""
+def list_captures(page_url: str, since: str = "2015",
+                  collapse: str | None = "digest") -> list[dict]:
+    """List Wayback-captures for en side-URL.
+
+    collapse='digest' (default) giver unikke indholdsversioner; med
+    collapse=None faas alle captures - brugbart naar siden aendres ofte
+    men Wayback sjældent gemmer nyt indhold (fx Sparkron).
+    """
     host_path = re.sub(r"^https?://(www\.)?", "", page_url).rstrip("/") + "/"
     params = {
         "url": host_path,
         "from": since,
         "output": "json",
         "filter": ["statuscode:200", "mimetype:text/html"],
-        "collapse": "digest",
     }
+    if collapse:
+        params["collapse"] = collapse
     print(f"Henter capture-liste for {page_url} ...", flush=True)
     r = requests.get("https://web.archive.org/cdx/search/cdx",
                      params=params, headers=UA, timeout=120)

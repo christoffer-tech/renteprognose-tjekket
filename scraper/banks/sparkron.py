@@ -22,6 +22,10 @@ from common import (add_months, clean, obs_date_for, parse_dk_date,
 BANK_ID = "sparkron"
 LABEL = "Sparekassen Kronjylland"
 PAGE_URL = "https://www.sparkron.dk/investering/raadgivning/renteprognose"
+# Spejlsider med samme prognosetabel (/da/, lommepenge, kron).
+ALT_URLS = ["https://www.sparkron.dk/da/investering/raadgivning/renteprognose",
+            "https://lommepenge.sparkron.dk/investering/raadgivning/renteprognose",
+            "https://kron.sparkron.dk/investering/raadgivning/renteprognose"]
 
 # relative horisonter (mdr.) for +6 / +12-kolonnerne
 HORIZONS = [6, 12]

@@ -1,0 +1,108 @@
+{
+ "bank": "sydbank",
+ "source": "live-pdf",
+ "capture": null,
+ "obs_date": "2024-01-04",
+ "pub_date": "2024-01-04",
+ "recalc_date": null,
+ "targets": [
+  "2024-04-04",
+  "2024-07-04",
+  "2025-01-04"
+ ],
+ "rows": {
+  "cibor3": {
+   "name": "3-måneders rente (CIBOR)",
+   "aktuelt": 3.88,
+   "forecasts": [
+    4.0,
+    3.4,
+    2.7
+   ]
+  },
+  "stat10": {
+   "name": "10-årig statsobligationsrente",
+   "aktuelt": 2.28,
+   "forecasts": [
+    2.35,
+    2.2,
+    2.0
+   ]
+  },
+  "fkort": {
+   "name": "F-kort realkreditrente (Juli 2026)",
+   "aktuelt": 4.09,
+   "forecasts": [
+    4.09,
+    3.3,
+    2.8
+   ]
+  },
+  "f3": {
+   "name": "3-års realkreditrente (Januar 2027)",
+   "aktuelt": 2.69,
+   "forecasts": [
+    2.85,
+    2.65,
+    2.35
+   ]
+  },
+  "f5": {
+   "name": "5-års realkreditrente (Januar 2029)",
+   "aktuelt": 2.75,
+   "forecasts": [
+    2.9,
+    2.75,
+    2.5
+   ]
+  },
+  "fast30": {
+   "name": "30-års realkreditrente",
+   "aktuelt": 4.29,
+   "forecasts": [
+    4.45,
+    4.25,
+    4.1
+   ]
+  }
+ },
+ "raw_rows": {
+  "3-måneders rente (CIBOR)": [
+   3.88,
+   4.0,
+   3.4,
+   2.7
+  ],
+  "10-årig statsobligationsrente": [
+   2.28,
+   2.35,
+   2.2,
+   2.0
+  ],
+  "F-kort realkreditrente (Juli 2026)": [
+   4.09,
+   4.09,
+   3.3,
+   2.8
+  ],
+  "3-års realkreditrente (Januar 2027)": [
+   2.69,
+   2.85,
+   2.65,
+   2.35
+  ],
+  "5-års realkreditrente (Januar 2029)": [
+   2.75,
+   2.9,
+   2.75,
+   2.5
+  ],
+  "30-års realkreditrente": [
+   4.29,
+   4.45,
+   4.25,
+   4.1
+  ]
+ },
+ "pdf_id": "0043215-107218"
+}

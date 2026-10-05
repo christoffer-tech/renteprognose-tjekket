@@ -1,0 +1,94 @@
+{
+ "bank": "sparkron",
+ "source": "wayback",
+ "capture": "20250321225033",
+ "obs_date": "2025-03-21",
+ "pub_date": "2025-03-18",
+ "recalc_date": null,
+ "targets": [
+  "2025-09-18",
+  "2026-03-18"
+ ],
+ "rows": {
+  "cita3": {
+   "name": "Cita3",
+   "aktuelt": 2.2,
+   "forecasts": [
+    1.8,
+    1.6
+   ]
+  },
+  "fkort": {
+   "name": "F-kort",
+   "aktuelt": 2.1,
+   "forecasts": [
+    1.7,
+    1.6
+   ]
+  },
+  "f1": {
+   "name": "F1",
+   "aktuelt": 2.2,
+   "forecasts": [
+    1.7,
+    1.6
+   ]
+  },
+  "f3": {
+   "name": "F3",
+   "aktuelt": 2.5,
+   "forecasts": [
+    2.3,
+    2.0
+   ]
+  },
+  "f5": {
+   "name": "F5",
+   "aktuelt": 2.75,
+   "forecasts": [
+    2.4,
+    2.2
+   ]
+  },
+  "fast30": {
+   "name": "Fast 30-årig",
+   "aktuelt": 4.2,
+   "forecasts": [
+    3.7,
+    3.5
+   ]
+  }
+ },
+ "raw_rows": {
+  "Cita3": [
+   2.2,
+   1.8,
+   1.6
+  ],
+  "F-kort": [
+   2.1,
+   1.7,
+   1.6
+  ],
+  "F1": [
+   2.2,
+   1.7,
+   1.6
+  ],
+  "F3": [
+   2.5,
+   2.3,
+   2.0
+  ],
+  "F5": [
+   2.75,
+   2.4,
+   2.2
+  ],
+  "Fast 30-årig": [
+   4.2,
+   3.7,
+   3.5
+  ]
+ }
+}

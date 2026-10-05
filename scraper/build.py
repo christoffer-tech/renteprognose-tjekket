@@ -44,8 +44,11 @@ PRODUCT_ORDER = ["cita3", "cita6", "cibor3", "cibor6", "fkort", "f1", "f3",
 
 HORIZONS = ["3M", "6M", "9M", "12M"]
 MAX_FACIT_GAP_DAYS = 60
-# RD: kvartalsvise facit-observationer -> interpolér, større tolerance
-RD_MAX_GAP_DAYS = 120
+# RD: kvartalsvise facit-observationer (gaps paa 90/275 dage) -> interpolér.
+# 140 dage dækker interpolation-vinduet (2 x 140 = 280 > 275); de aarlige
+# observationer foer 2011 (365 dage) kan ikke naas med vilje - de ville kræve
+# lineaær interpolation hen over et helt aar, hvilket er for groft.
+RD_MAX_GAP_DAYS = 140
 
 BANK_LABELS = {
     "nykredit": "Nykredit",
@@ -80,18 +83,17 @@ def load_snapshots(bank: str) -> list[dict]:
         except (json.JSONDecodeError, OSError) as e:
             print(f"[{bank}] ADVARSEL: springer {f.name} over ({e})")
     snaps.sort(key=lambda s: (s.get("pub_date") or "", s.get("capture") or ""))
-    seen: set[str] = set()
-    unique = []
+    # Dublet: samme publiceringsdato og samme prognosticerede vaerdier. Obs-
+    # datoen (capture-datoen) skal indgå i noeglen - ellers tæller 96 captures
+    # af én og samme prognose som 96 uafhængige observationer. Ved dublet
+    # beholder vi den seneste (dvs. capture med friskest 'Aktuelt').
+    latest: dict[str, dict] = {}
     for s in snaps:
-        core = {k: v for k, v in s.items() if k not in ("source", "capture")}
-        fp = json.dumps(core, sort_keys=True)
-        if fp in seen:
-            continue
-        seen.add(fp)
-        unique.append(s)
-    if len(unique) != len(snaps):
-        print(f"[{bank}] {len(snaps) - len(unique)} dublet-snapshots fjernet")
-    return unique
+        core = {k: v for k, v in s.items() if k not in ("source", "capture", "obs_date")}
+        latest[json.dumps(core, sort_keys=True)] = s
+    if len(latest) != len(snaps):
+        print(f"[{bank}] {len(snaps) - len(latest)} dublet-snapshots fjernet")
+    return sorted(latest.values(), key=lambda s: (s["pub_date"], s.get("capture") or ""))
 
 
 def horizon_bucket(pub: str, target: str) -> str:

@@ -1,0 +1,32 @@
+{
+ "bank": "sydbank",
+ "source": "wayback",
+ "capture": "20150320074452",
+ "obs_date": "2015-03-20",
+ "pub_date": "2015-03-20",
+ "recalc_date": null,
+ "targets": [
+  "2015-06-20",
+  "2015-09-20",
+  "2016-03-20"
+ ],
+ "rows": {
+  "fast30": {
+   "name": "30 års realkreditrente",
+   "aktuelt": 2.42,
+   "forecasts": [
+    2.2,
+    2.35,
+    2.55
+   ]
+  }
+ },
+ "raw_rows": {
+  "30 års realkreditrente": [
+   2.42,
+   2.2,
+   2.35,
+   2.55
+  ]
+ }
+}

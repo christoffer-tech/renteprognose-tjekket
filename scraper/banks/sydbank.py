@@ -11,11 +11,14 @@ import re
 from bs4 import BeautifulSoup
 
 from common import (BROWSER_HEADERS, add_months, clean, fetch,
-                    obs_date_for, parse_rate, table_rows)
+                     obs_date_for, parse_dk_date, parse_rate, table_rows)
 
 BANK_ID = "sydbank"
 LABEL = "Sydbank"
 PAGE_URL = "https://www.sydbank.dk/privat/produkter/boliglaan/renter"
+# Ældre renteforventningsside (2007-2019).
+ALT_URLS = ["https://www.sydbank.dk/privat/raadgivning/bolig/laaneanbefaling/"
+            "renteforventning"]
 
 # relativ horisont (mdr. interval-slut) pr. kolonne
 HORIZONS = [3, 6, 12]
@@ -35,6 +38,9 @@ def canonical_product(name: str) -> str | None:
         return "f3"
     if re.search(r"\bf5\b", n):
         return "f5"
+    # gammel side (2007-2019): '3 års realkreditrente' = 3-års obligation
+    if re.match(r"3[\s-]*(?:års|ars|aar)\s*realkreditrente", n):
+        return "fkort"
     if "30" in n and "realkreditrente" in n:
         return "fast30"
     return None
@@ -57,17 +63,41 @@ def fetch_page(url: str) -> str:
 def parse_snapshot(html: str, source: str, capture_ts: str | None,
                    fallback_date: str) -> dict | None:
     soup = BeautifulSoup(html, "lxml")
+    txt = re.sub(r"\s+", " ", soup.get_text(" ", strip=True))
 
     aktuelt: dict[str, float] = {}
     forecasts: dict[str, list] = {}
     names: dict[str, str] = {}
+    horizons = list(HORIZONS)
 
     for t in soup.find_all("table"):
         text = t.get_text(" ", strip=True).lower()
         rows = table_rows(t)
         if not rows:
             continue
-        if "aktuelt renteniveau" in text:
+        hdr = rows[0]
+        # Gammelt layout (2007-2019): '1. oktober | 0 - 3 mdr. | 3 - 6 mdr. |
+        # 6 - 12 mdr.' hvor foerste kolonne er det aktuelle renteniveau.
+        # Nuværende layout har samme header, men UDEN Aktuelt-kolonne
+        # (Aktuelt staar i en separat tabel) - saa 3 vaerdier er nok.
+        found = [int(x) for x in re.findall(r"(\d+)\s*mdr", " ".join(hdr), re.I)]
+        if len(found) >= len(HORIZONS) and len(hdr) >= len(HORIZONS) + 1:
+            for r in rows[1:]:
+                if not r:
+                    continue
+                key = canonical_product(clean(r[0]))
+                if key is None:
+                    continue
+                vals = rate_cells(r[1:])
+                if len(vals) >= len(HORIZONS) + 1:
+                    aktuelt[key] = vals[0]
+                    forecasts[key] = vals[1:len(HORIZONS) + 1]
+                    names[key] = clean(r[0])
+                elif len(vals) >= len(HORIZONS):
+                    forecasts[key] = vals[:len(HORIZONS)]
+                    names[key] = clean(r[0])
+            horizons = found[-len(HORIZONS):]
+        elif "aktuelt renteniveau" in text:
             # NB: ingen header-række - første række er allerede et produkt
             for r in rows:
                 if not r:
@@ -95,7 +125,10 @@ def parse_snapshot(html: str, source: str, capture_ts: str | None,
         return None
 
     pub_date = fallback_date
-    targets = [add_months(pub_date, h) for h in HORIZONS]
+    m = re.search(r"renteforventning for Danmark\s+(\d{1,2}\.\s*[a-zæøå]+)", txt, re.I)
+    if m:
+        pub_date = parse_dk_date(f"{m.group(1)} {fallback_date[:4]}") or pub_date
+    targets = [add_months(pub_date, h) for h in horizons]
 
     data_rows: dict[str, dict] = {}
     raw_rows: dict[str, list] = {}

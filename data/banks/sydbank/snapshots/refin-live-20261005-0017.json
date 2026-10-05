@@ -1,0 +1,57 @@
+{
+ "bank": "sydbank",
+ "source": "live",
+ "capture": null,
+ "obs_date": "2026-10-05",
+ "pub_date": "2026-09-04",
+ "recalc_date": null,
+ "targets": [
+  "2027-01-01"
+ ],
+ "rows": {
+  "f1": {
+   "name": "F1 realkreditrente",
+   "aktuelt": null,
+   "forecasts": [
+    3.1
+   ],
+   "targets": [
+    "2027-01-01"
+   ]
+  },
+  "f3": {
+   "name": "F3 realkreditrente",
+   "aktuelt": null,
+   "forecasts": [
+    3.2
+   ],
+   "targets": [
+    "2027-01-01"
+   ]
+  },
+  "f5": {
+   "name": "F5 realkreditrente",
+   "aktuelt": null,
+   "forecasts": [
+    3.3
+   ],
+   "targets": [
+    "2027-01-01"
+   ]
+  }
+ },
+ "raw_rows": {
+  "F1 realkreditrente": [
+   null,
+   3.1
+  ],
+  "F3 realkreditrente": [
+   null,
+   3.2
+  ],
+  "F5 realkreditrente": [
+   null,
+   3.3
+  ]
+ }
+}

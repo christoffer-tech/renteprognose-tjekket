@@ -1,0 +1,58 @@
+{
+ "bank": "nordea",
+ "source": "live-auktion",
+ "capture": null,
+ "obs_date": "2026-06-01",
+ "pub_date": "2026-06-01",
+ "recalc_date": null,
+ "targets": [
+  "2026-10-01"
+ ],
+ "rows": {
+  "f1": {
+   "name": "Rentetilpasningslån F1",
+   "aktuelt": 2.17,
+   "forecasts": [
+    2.9
+   ],
+   "targets": [
+    "2026-10-01"
+   ]
+  },
+  "f3": {
+   "name": "Rentetilpasningslån F3",
+   "aktuelt": 3.66,
+   "forecasts": [
+    2.9
+   ],
+   "targets": [
+    "2026-10-01"
+   ]
+  },
+  "f5": {
+   "name": "Rentetilpasningslån F5",
+   "aktuelt": -0.1,
+   "forecasts": [
+    3.0
+   ],
+   "targets": [
+    "2026-10-01"
+   ]
+  }
+ },
+ "raw_rows": {
+  "Rentetilpasningslån F1": [
+   2.17,
+   2.9
+  ],
+  "Rentetilpasningslån F3": [
+   3.66,
+   2.9
+  ],
+  "Rentetilpasningslån F5": [
+   -0.1,
+   3.0
+  ]
+ },
+ "article_url": "https://www.nordea.com/da/nyhed/forventninger-til-f1-f3-og-f5-renten-1.-oktober-2026"
+}

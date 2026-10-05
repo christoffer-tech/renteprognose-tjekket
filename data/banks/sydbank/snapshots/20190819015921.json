@@ -1,0 +1,47 @@
+{
+ "bank": "sydbank",
+ "source": "wayback",
+ "capture": "20190819015921",
+ "obs_date": "2019-08-19",
+ "pub_date": "2019-08-19",
+ "recalc_date": null,
+ "targets": [
+  "2019-11-19",
+  "2020-02-19",
+  "2020-08-19"
+ ],
+ "rows": {
+  "fast30": {
+   "name": "30 års realkreditrente",
+   "aktuelt": 0.92,
+   "forecasts": [
+    1.05,
+    1.0,
+    1.25
+   ]
+  },
+  "fkort": {
+   "name": "F-kort",
+   "aktuelt": -0.36,
+   "forecasts": [
+    -0.4,
+    -0.4,
+    -0.4
+   ]
+  }
+ },
+ "raw_rows": {
+  "30 års realkreditrente": [
+   0.92,
+   1.05,
+   1.0,
+   1.25
+  ],
+  "F-kort": [
+   -0.36,
+   -0.4,
+   -0.4,
+   -0.4
+  ]
+ }
+}

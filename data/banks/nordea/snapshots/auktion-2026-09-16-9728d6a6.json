@@ -1,0 +1,58 @@
+{
+ "bank": "nordea",
+ "source": "live-auktion",
+ "capture": null,
+ "obs_date": "2026-09-16",
+ "pub_date": "2026-09-16",
+ "recalc_date": null,
+ "targets": [
+  "2027-01-01"
+ ],
+ "rows": {
+  "f1": {
+   "name": "Rentetilpasningslån F1",
+   "aktuelt": 2.33,
+   "forecasts": [
+    3.1
+   ],
+   "targets": [
+    "2027-01-01"
+   ]
+  },
+  "f3": {
+   "name": "Rentetilpasningslån F3",
+   "aktuelt": 3.5,
+   "forecasts": [
+    3.1
+   ],
+   "targets": [
+    "2027-01-01"
+   ]
+  },
+  "f5": {
+   "name": "Rentetilpasningslån F5",
+   "aktuelt": 0.16,
+   "forecasts": [
+    3.2
+   ],
+   "targets": [
+    "2027-01-01"
+   ]
+  }
+ },
+ "raw_rows": {
+  "Rentetilpasningslån F1": [
+   2.33,
+   3.1
+  ],
+  "Rentetilpasningslån F3": [
+   3.5,
+   3.1
+  ],
+  "Rentetilpasningslån F5": [
+   0.16,
+   3.2
+  ]
+ },
+ "article_url": "https://www.nordea.com/da/nyhed/forventninger-til-f1-f3-og-f5-renten-1.-januar-2027"
+}

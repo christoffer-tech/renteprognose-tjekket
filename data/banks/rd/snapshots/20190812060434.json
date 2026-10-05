@@ -1,0 +1,77 @@
+{
+ "bank": "rd",
+ "source": "wayback",
+ "capture": "20190812060434",
+ "obs_date": "2019-08-12",
+ "pub_date": "2019-08-09",
+ "recalc_date": null,
+ "targets": [
+  "2019-11-09",
+  "2020-02-09",
+  "2020-08-09"
+ ],
+ "rows": {
+  "f1": {
+   "name": "FlexLån® F1 DKK",
+   "aktuelt": null,
+   "forecasts": [
+    -0.7,
+    -0.7,
+    -0.8
+   ],
+   "targets": [
+    "2019-11-09",
+    "2020-02-09",
+    "2020-08-09"
+   ]
+  },
+  "f3": {
+   "name": "FlexLån® F3 DKK",
+   "aktuelt": null,
+   "forecasts": [
+    -0.8,
+    -0.8,
+    -0.8
+   ],
+   "targets": [
+    "2019-11-09",
+    "2020-02-09",
+    "2020-08-09"
+   ]
+  },
+  "f5": {
+   "name": "FlexLån® F5 DKK",
+   "aktuelt": null,
+   "forecasts": [
+    -0.6,
+    -0.7,
+    -0.6
+   ],
+   "targets": [
+    "2019-11-09",
+    "2020-02-09",
+    "2020-08-09"
+   ]
+  }
+ },
+ "raw_rows": {
+  "FlexLån® F1 DKK": [
+   null,
+   -0.7,
+   -0.7,
+   -0.8
+  ],
+  "FlexLån® F3 DKK": [
+   null,
+   -0.8,
+   -0.8,
+   -0.8
+  ],
+  "FlexLån® F5 DKK": [
+   null,
+   -0.6,
+   -0.7,
+   -0.6
+  ]
+ }
+}

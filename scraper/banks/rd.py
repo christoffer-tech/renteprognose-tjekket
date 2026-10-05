@@ -22,6 +22,11 @@ BANK_ID = "rd"
 LABEL = "Realkredit Danmark"
 PAGE_URL = "https://rd.dk/kurser-og-renter/renteprognose"
 FACIT_URL = "https://rd.dk/laantyper/flexlaan-k/renteudvikling"
+# Gammel SharePoint-side (2012-2021) med samme FlexLån-tabel.
+ALT_URLS = ["https://www.rd.dk/da-dk/privat/koeb-bolig/Kurser-og-renter/"
+            "Pages/Renteprognose.aspx",
+            # Erhverv-spejl af samme prognoseside (egen Wayback-historik).
+            "https://rd.dk/erhverv/kurser-og-renter/renteprognose"]
 
 REF_MONTHS = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "maj": 5, "may": 5,
               "jun": 6, "jul": 7, "aug": 8, "sep": 9, "okt": 10, "oct": 10,
@@ -43,11 +48,15 @@ def canonical_product(name: str) -> str | None:
 
 
 def parse_cell(text: str):
-    """Interval -> {'lo':..,'hi':..}, ellers enkeltværdi eller None."""
+    """Interval -> {'lo':..,'hi':..}, ellers enkeltværdi eller None.
+
+    Før 2016 stod værdierne uden %-tegn ('0,50') - derfor tilføjes '%'
+    ved manglende tegn, ellers ville alle ældre snapshots parses som tomme.
+    """
     iv = parse_interval(text)
     if iv is not None:
         return {"lo": iv[0], "hi": iv[1]}
-    return parse_rate(text)
+    return parse_rate(text if "%" in text else text + " %")
 
 
 def parse_snapshot(html: str, source: str, capture_ts: str | None,
