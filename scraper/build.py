@@ -38,9 +38,17 @@ PRODUCT_LABELS = {
     "fast30kupon": "Fast 30 år (kupon)",
     "stat10": "10-årig statsrente",
     "frihed": "Jyske Frihed",
+    # Jyske Markets' "Renteprognose": markedsrenter (2019-2024). Holdt adskilt
+    # fra bankens boligrenter, som har et andet spread.
+    "leading_dk": "Nationalbankens rente",
+    "stat2": "Stat 2 år",
+    "stat5": "Stat 5 år",
+    "stat30": "Stat 30 år",
 }
 PRODUCT_ORDER = ["cita3", "cita6", "cibor3", "cibor6", "fkort", "f1", "f3",
-                 "f5", "fast20", "fast30", "fast30kupon", "stat10", "frihed"]
+                 "f5", "fast20", "fast30", "fast30kupon", "stat10", "frihed",
+                 # Jyske Markets' markedsrenter (egen serie, 2019-2024)
+                 "leading_dk", "stat2", "stat5", "stat30"]
 
 HORIZONS = ["3M", "6M", "9M", "12M"]
 MAX_FACIT_GAP_DAYS = 60
@@ -188,14 +196,16 @@ def build_bank(bank: str) -> dict:
     if not snaps:
         raise SystemExit(f"[{bank}] ingen snapshots - kør scrape.py først")
 
-    # evt. ekstern facit-serie (RD FlexLån)
+    # evt. ekstern facit-serie (RD FlexLån, Jyske markedsrenter)
     ext_facit: dict[str, list] = {}
-    if bank == "rd":
-        f = ROOT / "data" / "banks" / "rd" / "facit.json"
-        if f.exists():
-            ext_facit = json.loads(f.read_text(encoding="utf-8"))
-            print(f"[{bank}] ekstern facit-serie: " +
-                  ", ".join(f"{k}={len(v)}" for k, v in ext_facit.items()))
+    facit_file = {
+        "rd": ROOT / "data" / "banks" / "rd" / "facit.json",
+        "jyske": ROOT / "data" / "banks" / "jyske" / "facit.json",
+    }.get(bank)
+    if facit_file is not None and facit_file.exists():
+        ext_facit = json.loads(facit_file.read_text(encoding="utf-8"))
+        print(f"[{bank}] ekstern facit-serie: " +
+              ", ".join(f"{k}={len(v)}" for k, v in ext_facit.items()))
 
     def obs_of(s: dict) -> str:
         if s.get("obs_date"):
@@ -222,7 +232,7 @@ def build_bank(bank: str) -> dict:
         if p in facit and series:
             facit[p] = [(d, v) for d, v in series]
 
-    interpolate = (bank == "rd")
+    interpolate = bank in ("rd", "jyske")
     max_gap = RD_MAX_GAP_DAYS if bank == "rd" else MAX_FACIT_GAP_DAYS
 
     # Punkt-niveau-dubletter: samme (produkt, publiceringsdato, måldato) kan
