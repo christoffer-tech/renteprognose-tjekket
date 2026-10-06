@@ -31,30 +31,46 @@
     return Math.round(v * 100) + " %";
   }
 
-  var todayLine = {
+  /* Lodrette markeringer: 'i dag' og den seneste faktiske observation. Uden
+     den sidste ser det ud som om facit-linjen bare stopper uden grund. */
+  function vline(value, label, dash) {
+    return {
+      afterDraw: function (chart) {
+        var x = chart.scales.x;
+        if (value < x.min || value > x.max) return;
+        var px = x.getPixelForValue(value);
+        var area = chart.chartArea;
+        var ctx = chart.ctx;
+        ctx.save();
+        ctx.strokeStyle = "rgba(74,82,92,.55)";
+        ctx.setLineDash(dash);
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(px, area.top);
+        ctx.lineTo(px, area.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(74,82,92,.95)";
+        ctx.font = "11px sans-serif";
+        var w = ctx.measureText(label).width;
+        var tx = px + 5;
+        if (tx + w > area.right) tx = px - 5 - w;
+        ctx.fillText(label, tx, area.top + 12);
+        ctx.restore();
+      }
+    };
+  }
+  var todayLinePlugin = {
     id: "todayLine",
-    afterDraw: function (chart) {
-      var x = chart.scales.x;
-      var now = Date.now();
-      if (now < x.min || now > x.max) return;
-      var px = x.getPixelForValue(now);
-      var area = chart.chartArea;
-      var ctx = chart.ctx;
-      ctx.save();
-      ctx.strokeStyle = "rgba(74,82,92,.6)";
-      ctx.setLineDash([5, 4]);
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(px, area.top);
-      ctx.lineTo(px, area.bottom);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(74,82,92,.95)";
-      ctx.font = "11px sans-serif";
-      ctx.fillText("i dag", px + 5, area.top + 12);
-      ctx.restore();
-    }
+    afterDraw: (function () {
+      var draw = vline(Date.now(), "i dag", [5, 4]).afterDraw;
+      return draw;
+    })()
   };
+  function lastObsPlugin(ts, label) {
+    if (!ts) return null;
+    return { id: "lastObs", afterDraw: vline(ts, label, [2, 3]).afterDraw };
+  }
 
   /* På smalle skærme overlapper datoetiketterne, så vi viser færre. */
   function tickLimit() {
@@ -257,15 +273,25 @@
     var DAY = 86400000;
     var ws = windowStart();
     var xMin = ws ? parseDate(ws) : Math.min.apply(null, allX) - 20 * DAY;
-    var xMax = Math.max.apply(null, allX.concat([Date.now()])) + 40 * DAY;
+    // Prognoser rækker op til halvandet år ud i fremtiden. Gav man aksen hele
+    // det spænd, endte facit-linjen midt i grafen og alt datapressede sig sammen
+    // i venstre side. Vi holder derfor aksen til en rimelig fremskrivning:
+    // et kvartal efter den seneste observation (dog mindst til i dag).
+    var obs = (d.actuals[p] || []).map(function (a) { return parseDate(a[0]); });
+    var lastObsTs = obs.length ? Math.max.apply(null, obs) : null;
+    var xMax = Math.max(lastObsTs || 0, Date.now()) + 120 * DAY;
 
     var ctx = document.getElementById("chart-main");
+    var obsMarker = lastObsTs ? lastObsPlugin(lastObsTs, "seneste facit") : null;
     state.charts.main = new Chart(ctx, {
       type: "line",
       data: { datasets: datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        // Uden dette fanger et skærmbillede (og en langsom browser) grafen
+        // midt i indtegningen, hvor alle punkter står i venstre kant.
+        animation: false,
         interaction: { mode: "nearest", intersect: false },
         plugins: {
           legend: { display: false },
@@ -289,7 +315,7 @@
           }
         }
       },
-      plugins: [todayLine]
+      plugins: obsMarker ? [todayLinePlugin, obsMarker] : [todayLinePlugin]
     });
   }
 
@@ -336,6 +362,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -398,6 +425,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -752,6 +780,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -859,6 +888,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: { display: false },
           tooltip: {
