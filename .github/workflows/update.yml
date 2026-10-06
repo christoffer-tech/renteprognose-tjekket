@@ -29,6 +29,12 @@ jobs:
           cache: pip
           cache-dependency-path: scraper/requirements.txt
 
+      - name: Installer systemafhængigheder
+        # pdftotext (poppler) læser de roterede prognosetabeller i Jyske
+        # Markets' "Renteprognose" korrekt; pdfplumber blander tegnrækkefølgen
+        # i netop de udgaver.
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
       - name: Installer afhængigheder
         run: pip install -r scraper/requirements.txt
 
@@ -37,6 +43,11 @@ jobs:
 
       - name: Hent RD's historiske FlexLån-renter (facit)
         run: python scraper/scrape.py facit-rd
+
+      - name: Opdatér facit for markedsrenter (Danmarks Statistik MPK3)
+        # Maanedlig serie; fejler bloedt hvis DST's API er nede, saa den
+        # eksisterende fil blot bliver liggende.
+        run: python scraper/fetch_facit.py || echo "MPK3 utilgaengelig - bruger gemt serie"
 
       - name: Validér de rå snapshots
         run: python scraper/validate_banks.py

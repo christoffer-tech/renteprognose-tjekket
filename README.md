@@ -17,7 +17,7 @@ Siden er statisk (HTML/CSS/JS + Chart.js) og hostes gratis på
 - Historie: 41 snapshots, 848 prognoser, 653 med facit (Nykredit fra 2019-07-23)
 - Største fejlskud: Fast 30 år, jan. 2022 → okt. 2022 (spået 1,74 %, facit 5,52 %)
 
-Samlet for alle seks banker: 4 362 prognoser, 2 755 med facit, spredt fra 2011
+Samlet for alle seks banker: 4 602 prognoser, 3 437 med facit, spredt fra 2011
 til i dag.
 
 Tallene tæller **én prognose én gang**. Bankerne genudgiver jævnligt samme
@@ -85,7 +85,7 @@ Backfill via Wayback (`--since`, default 2015). Bankernes `ALT_URLS` dækker
 | Nordea | 2019-05-16 | 45 | 1 044 | hovedtabel + auktionsprognoser (nordea.com, 3 stk/år) |
 | Nykredit | 2019-07-23 | 41 | 848 | 3 ældre captures (2018–2019) har intet parsebart bord |
 | Sparekassen Kronjylland | 2017-07-14 | 28 | 300 | Investeringsmagasinets `RENTEPROGNOSE`-tabel (2017–2019, `backfill_sparkron_pdf.py`) + nuværende renteside + spejlesiderne `/da/`, lommepenge, kron (alle captures, `--full`) |
-| Jyske Bank | 2019-09-02 | 41 | 1 093 | kvartalsnotatet "Boliglånsanbefaling" (arkivet + ugentligt snapshot) + **markedsrente-prognoserne i "Renteprognose"** (2019–2024, `backfill_jyske_renteprognose.py`) med facit fra Danmarks Statistik (`fetch_facit.py`) + den nuværende HTML-side |
+| Jyske Bank | 2019-09-02 | 47 | 1 333 | kvartalsnotatet "Boliglånsanbefaling" + **markedsrente-prognoserne i "Renteprognose"** (2019–2026, `backfill_jyske_renteprognose.py`) med facit fra Danmarks Statistik (`fetch_facit.py`) og bankens egne Spot-kolonner + den nuværende HTML-side |
 
 "Snapshots" er antallet af optagelser der overlever dublet-fjernelsen, og
 "unikke prognoser" er antallet af (produkt, publiceringsdato, måldato)-punkter
@@ -93,50 +93,59 @@ i `dataset.json`. De rå filer i `data/**/snapshots/` er flere: fx ligger der
 183 RD-filer, hvoraf langt de fleste er genarkiveringer af en uændret side.
 `python scraper/validate_banks.py` viser fordelingen.
 
-Jyske Banks hul er nu **delvist lukket**, og det viste sig at ligge et andet
-sted end antaget. Bankens boligrenter (F1/F3/F5) findes kun som maskinlæsbar
-tabel i kvartalsnotatet "Boliglånsanbefaling" — Q1 2024-udgaven er hentet fra
-Wayback og giver 16 punkter, hvoraf 12 med facit.
+Jyske Banks hul er nu **lukket for markedsrenternes vedkommende**. Bankens
+boligrenter (F1/F3/F5) findes kun som maskinlæsbar tabel i kvartalsnotatet
+"Boliglånsanbefaling" — Q1 2024-udgaven er hentet fra arkivet og giver 16
+punkter, hvoraf 12 med facit.
 
-Men bankens **markedsrenteprognoser** ligger i et helt andet notat: det
-månedlige "Renteprognose" fra Jyske Markets, som indeholder de maskinlæsbare
-tabeller `STATSRENTER` og `SWAPRENTER` for Danmark, Eurozonen og USA. Serien
-dækker **september 2019 – juni 2024**, og PDF'erne ligger stadig på
-jyskebank.dk. Det tilføjer 945 punkter på `stat10`, `stat2`, `stat5`, `stat30`,
-`cibor3`, `cibor6` og `leading_dk` — og løfter bankens første prognose fra
-2024-06-18 til **2019-09-02**.
+Bankens **markedsrenteprognoser** ligger i et helt andet notat: det månedlige
+"Renteprognose" fra Jyske Markets med tabellerne `STATSRENTER` og
+`SWAPRENTER` (fra 2024 samlet i `STATS- OG SWAPRENTER`). Serien dækker
+**september 2019 – april 2026** og giver 1 185 punkter på `stat10`, `stat2`,
+`stat5`, `stat30`, `cibor3`, `cibor6` og `leading_dk`.
 
-Markedsrenterne havde ingen facit, fordi bankens egne observationer først
-begynder i 2024. Det er løst med en uafhængig, autoritativ kilde:
+| Produkt | Med facit | MAE |
+|---|---|---|
+| `stat10` (10-årig statsobligation) | 171/180 | 0,73 |
+| `leading_dk` (Nationalbankens rente) | 161/170 | 0,82 |
+| `stat2` | 136/175 | 0,66 |
+| `stat5` | 140/180 | 0,59 |
+| `stat30` | 113/160 | 0,53 |
+| `cibor3` | 131/170 | 0,47 |
+| `cibor6` | 104/150 | 0,67 |
 
-> Danmarks Statistiks tabel **MPK3** ("Rentesatser, ultimo") er månedlig tilbage
-> til 1985 og indeholder både *10 årig statsobligation*, *CIBOR 3 måneder* og
-> *Nationalbankens udlånsrente*. Den hentes af `scraper/fetch_facit.py` og
-> bruges som facit for `stat10`, `cibor3` og `leading_dk`.
+Facit kommer fra to kilder der supplerer hinanden:
 
-Det giver 274 markedsrente-punkter med facit. `stat10` (MAE 0,78) og
-`leading_dk` (MAE 0,94) er de bærende. `cibor3` har ingen facit, fordi CIBOR 3M
-blev nedlagt i august 2019. `stat2`, `stat5` og `stat30` har kun enkelte
-facit-punkter, da MPK3 ikke har de løbetider.
+1. **Danmarks Statistiks tabel MPK3** ("Rentesatser, ultimo"), hentet af
+   `scraper/fetch_facit.py`. Månedlig tilbage til 1985 med *10 årig
+   statsobligation*, *CIBOR 3 måneder* og *Nationalbankens udlånsrente*.
+2. **Bankens egne Spot-kolonner.** Hver udgave oplyser det aktuelle niveau, og
+   de værdier er observationer på publiceringsdagen. Med 47 udgaver giver det
+   dækning for de løbetider MPK3 ikke har (`stat2`, `stat5`, `stat30`,
+   `cibor6`) — og for `cibor3` efter MPK3's serie slutter.
 
-Fasit-koblingen gjorde også `stat10` **sammenlignelig på tværs af banker**:
-Sydbank har samme produkt, og begge er nu i den kanoniske mapping. Jyske
-kommer dermed ind i mesterskabet med 12 discipliner mod 9 før.
+Kilderne **flettes** i `build.py` frem for at erstatte hinanden. En ren
+erstatning ville slette `cibor3`-dækningen, fordi MPK3's CIBOR-serie slutter i
+august 2019 — før bankens første prognose.
 
-Verificeret mod uafhængig kilde: Jyskes egen *Spot*-kolonne for 4. december 2019
-er −0,34, og DST's måling for november 2019 er −0,34.
+Det gjorde også `stat10`, `cibor3` og `cibor6` **sammenlignelige på tværs af
+banker**. Jyske møder Sydbank på statsrenten, og Nordea på begge CIBOR-løbetider.
+Banken går fra 12 til 20 discipliner i mesterskabet.
 
-Det øvrige Jyske-materiale er afprøvet og kan ikke bruges:
+### To fælder undervejs
 
-- **CDX-indekset viser 22 relevante kvartals-PDF'er**, men kun **1 af 22** kan
-  faktisk afspilles; resten svarer 404 selv om indekset melder HTTP 200. De
-  gamle `/wps/wcm/connect/jfo/<uuid>/`-URL'er svarer 403/404.
-- **Graferne i "Renteprognose"** er vektorgrafik og kan i princippet læses ud
-  (akser og kurver er koordinater), men tabellerne i samme PDF'er gør det
-  overflødigt. Kalibreringen ligger uverificeret i `scraper/experiments/`.
-- **`forventning-til-rentetilpasning.pdf`** har den kvartalsvise boligrente-
-  prognose i en figur, ikke en tabel. **`resultat-rentetilpasning-privat.pdf`**
-  har en maskinlæsbar F1/F3/F5-tabel, men det er facit, ikke en prognose.
+**CIBOR-serien i DST's `DNRENTM` ser ud til at dække til 2024, men er død.**
+Tabellen `MCI03M` har 420 observationer frem til 2024M07 — men de sidste 113 er
+alle præcis `0.0`. Reelle data stopper i december 2013; derefter er der
+pladsholdere. Havde de været brugt som facit, ville Jyskes CIBOR-prognoser se
+katastrofalt dårlige ud (spået −0,4 mod "facit" 0,0) — en fuldstændig falsk
+konklusion. Fælden blev fanget ved at sammenligne med bankens egne Spot-værdier.
+
+**pdfplumber kan ikke læse de nyere udgaver.** Fra slutningen af 2024 er
+prognosetabellerne roteret, og pdfplumbers tekstudtræk blander tegnrækkefølgen
+(`'b e l 1 : J y s k e'`). `pdftotext` (poppler) håndterer layoutet korrekt, så
+parseren prøver det først og falder tilbage til pdfplumber. CI installerer
+`poppler-utils`.
 
 Det er stadig ikke lykkedes at aflede boligrenterne fra markedsrenterne. Jyske
 spår kun om én løbetid pr. marked (10-årig swap/stat), og i Q1 2024-notatet

@@ -26,12 +26,15 @@ from scrape import _save_if_new, snap_dir
 
 BANK_ID = "jyske"
 CDX = "https://web.archive.org/cdx/search/cdx"
-# Stier hvor Jyske har lagt notaterne gennem tiden. Vi spoerger CDX pr. sti
-# (prefix virker paalideligt, hvor matchType=domain ikke goer).
+# Stier hvor Jyske har lagt notaterne gennem tiden. Vi spoerger CDX pr. sti OG
+# pr. aar, for et bredt prefix rammer API'ets graense paa 5000 raekker og
+# dermed skjuler de nyeste udgaver.
 PREFIXES = [
     "jyskebank.dk/wps/wcm/connect/jfo/",
     "jyskebank.dk/media/api/content/mediafiles/",
+    "jyskebank.dk/pdf/",
 ]
+YEARS = range(2015, 2027)
 NAME_RE = re.compile(r"renteprognos|renteprogos", re.I)
 UA = {"User-Agent": "Mozilla/5.0 renteprognose-tracker (research project)"}
 
@@ -42,26 +45,29 @@ def discover() -> list[str]:
 
     urls: set[str] = set()
     for prefix in PREFIXES:
-        for attempt in range(5):
-            try:
-                r = requests.get(CDX, params={
-                    "url": prefix, "matchType": "prefix", "from": "2018",
-                    "output": "json", "fl": "original", "collapse": "urlkey",
-                    "limit": "5000",
-                }, headers=UA, timeout=220)
-                if r.status_code == 200 and r.content.strip().startswith(b"["):
-                    data = r.json()
-                    for row in data[1:]:
-                        o = row[0].split("?")[0]
-                        if o.lower().endswith(".pdf") and NAME_RE.search(
-                                urllib.parse.unquote(o)):
-                            urls.add(o)
-                    print(f"  {prefix}: {len(data) - 1} URL'er")
-                    break
-            except Exception as e:
-                print(f"  {prefix}: forsoeg {attempt + 1} fejlede "
-                      f"({type(e).__name__})")
-            time.sleep(20)
+        for year in YEARS:
+            for attempt in range(3):
+                try:
+                    r = requests.get(CDX, params={
+                        "url": prefix, "matchType": "prefix",
+                        "from": str(year), "to": str(year), "output": "json",
+                        "fl": "original", "collapse": "urlkey", "limit": "5000",
+                    }, headers=UA, timeout=200)
+                    if r.status_code == 200 and r.content.strip().startswith(b"["):
+                        data = r.json()
+                        n = 0
+                        for row in data[1:]:
+                            o = row[0].split("?")[0]
+                            if o.lower().endswith(".pdf") and NAME_RE.search(
+                                    urllib.parse.unquote(o)):
+                                urls.add(o)
+                                n += 1
+                        if n:
+                            print(f"  {prefix.split('/')[3]:12s} {year}: {n} traef")
+                        break
+                except Exception:
+                    time.sleep(10)
+            time.sleep(0.5)
     return sorted(urls)
 
 

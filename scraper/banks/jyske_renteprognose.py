@@ -24,26 +24,33 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from common import UA, obs_date_for
+from common import UA
 
 BANK_ID = "jyske"
 
 # (raekkelabel i tabellen, kanonisk produktnoegle)
 ROWS = [
+    # 2019-2024-udgaverne
     (r"^leading$", "leading_dk"),
+    # 2024-2026-udgaverne kalder den Politikrente
+    (r"^politikrente$", "leading_dk"),
     (r"^cibor\s*3\s*m$", "cibor3"),
     (r"^cibor\s*6\s*m$", "cibor6"),
-    (r"^stat\s*2\s*y$", "stat2"),
-    (r"^stat\s*5\s*y$", "stat5"),
-    (r"^stat\s*10\s*y$", "stat10"),
-    (r"^stat\s*30\s*y$", "stat30"),
+    # Løbetider skrives skiftevis 'STAT 2y' og 'STAT 2-årig'
+    (r"^stat\s*2\s*-?\s*(y|årig|årige)$", "stat2"),
+    (r"^stat\s*5\s*-?\s*(y|årig|årige)$", "stat5"),
+    (r"^stat\s*10\s*-?\s*(y|årig|årige)$", "stat10"),
+    (r"^stat\s*30\s*-?\s*(y|årig|årige)$", "stat30"),
 ]
 IGNORE = (r"^stat\s*\d+\s*y\s*-", r"^amn", r"^kilde")
 
 # Omraader: 'Danmark', 'Eurozonen'/'Europa', 'USA'
 AREAS = [(r"danmark", "dk"), (r"euro|europa", "eu"), (r"usa|u\.s", "us")]
 
+# 2019-2024: "Tabel N: Jyske Bank Renteprognose"
+# 2024-2026: samme titel, men sektionen hedder "STATS- OG SWAPRENTER"
 TABEL_START = "jyske bank renteprognose"
+TABEL_ALT = ("stats- og swaprenter", "statsrenter", "swaprenter")
 
 # Kvartalsetiketter: Q1-24 .. Q4-26, evt. 'Q4-21'
 # ingen ankre: vi soeger kvartaler inde i en laengere overskrift
@@ -63,11 +70,19 @@ def parse_text(text: str, source: str, capture_ts: str | None,
                pub_date: str, fallback_date: str) -> dict | None:
     """Parse alle prognosetabeller i notatet."""
     lines = text.splitlines()
+    # Tabeltitlen er det sikre anker. Prosaen naevner 'statsrenter' flere sider
+    # foer tabellen, saa sektionsoverskrifter bruges kun som reserve.
     start = None
     for i, ln in enumerate(lines):
         if TABEL_START in ln.lower():
             start = i
             break
+    if start is None:
+        for i, ln in enumerate(lines):
+            low = ln.lower()
+            if any(a in low for a in TABEL_ALT):
+                start = i
+                break
     if start is None:
         return None
 
@@ -146,7 +161,11 @@ def parse_text(text: str, source: str, capture_ts: str | None,
         "bank": BANK_ID,
         "source": source,
         "capture": capture_ts,
-        "obs_date": obs_date_for(source, capture_ts, fallback_date),
+        # 'Spot'-kolonnen er observeret paa publiceringsdagen, saa
+        # observationsdatoen ER publiceringsdatoen. Uden dette arver alle
+        # snapshots den fallback-dato backfill'en sender, og facit-serien
+        # kollapser til én dato.
+        "obs_date": pub_date,
         "pub_date": pub_date,
         "recalc_date": None,
         "targets": targets[:max(len(r["forecasts"]) for r in rows.values())],
@@ -157,22 +176,70 @@ def parse_text(text: str, source: str, capture_ts: str | None,
     }
 
 
-def parse_pdf_bytes(pdf_bytes: bytes, source: str, capture_ts: str | None,
-                    fallback_date: str) -> dict | None:
+def _text_via_pdftotext(pdf_bytes: bytes) -> str | None:
+    """pdftotext haandterer de roterede tabeller, hvor pdfplumber blander
+    tegnrækkefølgen. Returnerer None hvis værktøjet ikke findes."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    exe = shutil.which("pdftotext")
+    if not exe:
+        return None
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as fh:
+        fh.write(pdf_bytes)
+        path = fh.name
+    try:
+        r = subprocess.run([exe, "-layout", path, "-"],
+                           capture_output=True, timeout=120)
+        if r.returncode != 0:
+            return None
+        return r.stdout.decode("utf-8", "replace")
+    except Exception:
+        return None
+    finally:
+        try:
+            import os
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+def _text_via_pdfplumber(pdf_bytes: bytes) -> str:
     import io
 
     import pdfplumber
     parts = []
-    pub = None
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
         for page in pdf.pages:
             parts.append(page.extract_text(layout=True) or "")
-    text = "\n".join(parts)
-    # Publiceringsdato: foerste dato i dokumentet ('05.03.2018 08:36')
-    m = re.search(r"(\d{2})\.(\d{2})\.(\d{4})", text)
+    return "\n".join(parts)
+
+
+def _pub_date(text: str, fallback: str) -> str:
+    # Dagen kan mangle foranstillet nul ('4.12.2025')
+    m = re.search(r"\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b", text)
     if m:
-        pub = f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
-    return parse_text(text, source, capture_ts, pub or fallback_date, fallback_date)
+        return f"{m.group(3)}-{int(m.group(2)):02d}-{int(m.group(1)):02d}"
+    return fallback
+
+
+def parse_pdf_bytes(pdf_bytes: bytes, source: str, capture_ts: str | None,
+                    fallback_date: str) -> dict | None:
+    """Proev begge tekstudtraek og brug det der giver en tabel.
+
+    Rækkefølgen betyder noget: pdftotext læser de roterede tabeller i
+    2024-2026-udgaverne korrekt, mens pdfplumber er bedst til de ældre.
+    """
+    for getter in (_text_via_pdftotext, _text_via_pdfplumber):
+        text = getter(pdf_bytes)
+        if not text:
+            continue
+        snap = parse_text(text, source, capture_ts, _pub_date(text, fallback_date),
+                          fallback_date)
+        if snap is not None:
+            return snap
+    return None
 
 
 def fetch_and_parse(url: str, source: str = "renteprognose",

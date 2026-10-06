@@ -2,7 +2,7 @@
  "bank": "jyske",
  "source": "renteprognose",
  "capture": null,
- "obs_date": "2020-01-01",
+ "obs_date": "2021-10-12",
  "pub_date": "2021-10-12",
  "recalc_date": null,
  "targets": [

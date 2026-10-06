@@ -230,7 +230,15 @@ def build_bank(bank: str) -> dict:
     # RD: erstat FlexLån-facit med den historiske serie
     for p, series in ext_facit.items():
         if p in facit and series:
-            facit[p] = [(d, v) for d, v in series]
+            # Flet i stedet for at erstatte. Den eksterne serie er autoritativ
+            # og taettere, men daekker ikke noedvendigvis hele perioden: MPK3's
+            # CIBOR-serie slutter fx i august 2019, foer Jyskes foerste
+            # prognose, og en ren erstatning ville derfor slette den
+            # facit-daekning bankens egne Spot-vaerdier giver.
+            merged = {d: v for d, v in facit[p]}
+            for d, v in series:
+                merged[d] = v          # ekstern kilde vinder ved samme dato
+            facit[p] = sorted(merged.items())
 
     interpolate = bank in ("rd", "jyske")
     max_gap = RD_MAX_GAP_DAYS if bank == "rd" else MAX_FACIT_GAP_DAYS

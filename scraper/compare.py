@@ -59,18 +59,19 @@ CANONICAL_MAP = {
     "nykredit": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT",
                  "cita3": "CITA3", "fast30": "FAST30"},
     "nordea": {"f1": "F1", "f3": "F3", "f5": "F5", "cita6": "CITA6",
-               "cibor3": "CIBOR3", "fast30": "FAST30"},
+               "cibor3": "CIBOR3", "cibor6": "CIBOR6", "fast30": "FAST30"},
     "sydbank": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT", "cita3": "CITA3",
                  "cibor3": "CIBOR3", "fast30": "FAST30", "stat10": "STAT10"},
     "jyske": {"f1": "F1", "f3": "F3", "f5": "F5", "cibor3": "CIBOR3",
-              "stat10": "STAT10"},
+              "cibor6": "CIBOR6", "stat10": "STAT10"},
     "rd": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT"},
     "sparkron": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT",
                  "cita3": "CITA3", "fast30": "FAST30"},
 }
 CANONICAL_LABELS = {
     "F1": "F1", "F3": "F3", "F5": "F5", "FKORT": "F-kort-type",
-    "CITA3": "CITA3", "CITA6": "CITA6", "CIBOR3": "CIBOR3", "FAST30": "Fast 30 år",
+    "CITA3": "CITA3", "CITA6": "CITA6", "CIBOR3": "CIBOR3",
+    "CIBOR6": "CIBOR6", "FAST30": "Fast 30 år",
     "STAT10": "10-årig statsrente",
 }
 
