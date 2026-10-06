@@ -342,7 +342,7 @@
     d.points.forEach(function (pt) {
       if (pt.p !== p || pt.err === null || !inWin(pt.pub)) return;
       pts.push({ x: parseDate(pt.target), y: pt.err, pub: pt.pub, fc: pt.fc, act: pt.act });
-      colors.push(pt.err > 0 ? "rgba(192,57,43,.78)" : pt.err < 0 ? "rgba(30,125,70,.78)" : "rgba(122,131,142,.75)");
+      colors.push(pt.err > 0 ? "rgba(30,125,70,.78)" : pt.err < 0 ? "rgba(192,57,43,.78)" : "rgba(122,131,142,.75)");
     });
     if (!pts.length) { setEmpty("error", true); return; }
     setEmpty("error", false);
@@ -434,7 +434,7 @@
           label: "Gns. fejl (pp)",
           data: vals,
           backgroundColor: vals.map(function (v) {
-            return v >= 0 ? "rgba(192,57,43,.85)" : "rgba(30,125,70,.85)";
+            return v >= 0 ? "rgba(30,125,70,.85)" : "rgba(192,57,43,.85)";
           })
         }]
       },
@@ -506,8 +506,8 @@
       tb.appendChild(tr);
     });
     document.getElementById("score-note").textContent =
-      "Horisont: " + hName + ". Positiv gns. fejl (rød) = renten endte i snit højere end spået, " +
-      "altså for optimistiske prognoser. Negativ (grøn) = for pessimistiske.";
+      "Horisont: " + hName + ". Positiv gns. fejl (grøn) = renten endte i snit højere end spået, " +
+      "altså for optimistiske prognoser. Negativ (rød) = for pessimistiske.";
   }
 
   /* ---------- CSV-download (alle banker) ---------- */

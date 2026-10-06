@@ -12,8 +12,10 @@
   --ink-2: #4A525C;
   --ink-3: #7A838E;
   --navy: #123A63;
-  --over: #C0392B;
-  --under: #1E7D46;
+  /* For optimistisk = groen, for pessimistisk = roed. Variabelnavnene foelger
+     grafen (over/under nul), ikke farven. */
+  --over: #1E7D46;
+  --under: #C0392B;
   --shame: #8A5A16;
   --shame-bg: #FBF3E4;
   --shame-line: #E3CDA6;
@@ -133,10 +135,10 @@ strong { font-weight: 680; }
 .kpi .s { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.45; }
 
 /* ---------- bias-meter ---------- */
-.meter-block { margin-top: 30px; max-width: 780px; }
+.meter-block { margin-top: 30px; }
 .meter {
   position: relative; height: 14px; border-radius: 999px; margin-top: 12px;
-  background: linear-gradient(90deg, var(--under) 0%, #8FBFA3 34%, #EFEFEF 50%, #E4A79F 66%, var(--over) 100%);
+  background: linear-gradient(90deg, var(--under) 0%, #E4A79F 34%, #EFEFEF 50%, #8FBFA3 66%, var(--over) 100%);
 }
 .meter-marker {
   position: absolute; top: -7px; width: 4px; height: 28px; border-radius: 2px;
@@ -243,8 +245,10 @@ tbody tr:hover { background: var(--surface); }
   padding: 46px 0 44px; border-bottom: 1px solid var(--line); background: var(--surface);
 }
 .podium {
-  display: flex; gap: 14px; align-items: flex-end; margin-top: 26px;
-  max-width: 860px;
+  display: flex; gap: 14px; align-items: flex-end;
+  /* max-width holdt sammen med auto-margin, saa skammelen staar centreret i
+     kolonnen i stedet for at hænge i venstre side. */
+  max-width: 860px; margin: 26px auto 0;
 }
 .podium-step {
   flex: 1; text-align: center; cursor: pointer; background: #fff;
