@@ -915,7 +915,9 @@
     renderHero();
     renderProduct();
     renderScore();
+    buildBankPicker();
     renderPodium();
+    renderField();
     renderChamp();
     renderCompareAll();
     renderHitrate();
@@ -943,7 +945,7 @@
   /* ---------- bankvælger + skam-skammel ---------- */
   function buildBankPicker() {
     var cmp = state.cmp.comparison;
-    ["bank-picker", "bank-picker-2"].forEach(function (id) {
+    ["bank-picker", "bank-picker-2", "bank-picker-3"].forEach(function (id) {
       var box = document.getElementById(id);
       if (!box) return;
       box.innerHTML = "";
@@ -955,8 +957,11 @@
         dot.style.background = cmp.banks[b].color;
         btn.appendChild(dot);
         btn.appendChild(document.createTextNode(cmp.banks[b].label));
-        if (b === state.bank) btn.className = "active";
-        btn.addEventListener("click", function () { selectBank(b, true); });
+        btn.className = (b === state.bank) ? "active" : "";
+        // Skam-sektionen og den øverste filterlinje skifter på stedet; det er
+        // kun valg fra produkt-sektionen der skal føre brugeren videre.
+        var scrollOnPick = (id === "bank-picker-2");
+        btn.addEventListener("click", function () { selectBank(b, scrollOnPick); });
         box.appendChild(btn);
       });
     });
@@ -976,17 +981,67 @@
     renderTabs(state.data);
     renderProduct();
     renderScore();
-    var btns = document.querySelectorAll(".bank-picker button");
+    // Synkronisér hver vælger for sig — der er flere på siden, og en fælles
+    // løkke med modulo ramte tidligere den forkerte knap.
     var keys = Object.keys(state.cmp.comparison.banks);
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].className = keys[i % keys.length] === b ? "active" : "";
-    }
+    ["bank-picker", "bank-picker-2", "bank-picker-3"].forEach(function (id) {
+      var box = document.getElementById(id);
+      if (!box) return;
+      var btns = box.querySelectorAll("button");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].className = keys[i] === b ? "active" : "";
+      }
+    });
     if (scroll) {
       document.getElementById("produkter").scrollIntoView({ behavior: "smooth" });
     }
   }
 
   var PODIUM_MIN_N = 30;
+
+  /* Kort navn til den kompakte tabel: 'Realkredit Danmark' -> 'Realkredit'. */
+  function bankShort(label) {
+    return String(label).split(" ")[0];
+  }
+
+  /* Kompakt overblik over alle banker der kan måles (samme MAE uanset periode
+     og produkt), så skammelen ikke står alene med tre navne. */
+  function renderField() {
+    var cmp = state.cmp.comparison;
+    var overall = comparison().overall;
+    var rows = Object.keys(overall)
+      .filter(function (b) {
+        var o = overall[b];
+        return o.mae !== null && (o.n || 0) >= PODIUM_MIN_N;
+      })
+      .sort(function (a, b) { return overall[a].mae - overall[b].mae; });
+    var tb = document.querySelector("#field-table tbody");
+    if (!tb) return;
+    tb.innerHTML = "";
+    rows.forEach(function (b) {
+      var o = overall[b];
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td></td><td></td><td></td><td></td><td></td>";
+      var tds = tr.querySelectorAll("td");
+      tds[0].innerHTML = "<span class='bk'><i style='background:" +
+        cmp.banks[b].color + "'></i>" + bankShort(cmp.banks[b].label) + "</span>";
+      tds[1].textContent = o.n;
+      tds[2].textContent = o.bias === null ? "–" : fmtSigned(o.bias);
+      tds[2].className = o.bias > 0 ? "bias-pos" : o.bias < 0 ? "bias-neg" : "";
+      tds[3].textContent = o.mae.toFixed(2).replace(".", ",");
+      tds[4].textContent = fmtShare(o.opt_share);
+      tr.className = "clickable";
+      tr.title = "Se " + cmp.banks[b].label + "s fulde regnskab";
+      tr.addEventListener("click", function () { selectBank(b, false); });
+      tb.appendChild(tr);
+    });
+    var note = document.getElementById("field-note");
+    if (note) {
+      note.textContent = "Alle " + rows.length + " banker der har mindst " +
+        PODIUM_MIN_N + " prognoser med facit. Sorteret efter middel absolut fejl — " +
+        "mindst er bedst. Klik på en bank for at skifte til dens tal nedenfor.";
+    }
+  }
 
   function renderPodium() {
     var cmp = state.cmp.comparison;
@@ -1058,6 +1113,7 @@
         renderChamp();
         buildBankPicker();
         renderPodium();
+        renderField();
         buildCmpProducts();
         document.getElementById("cmp-horizon").value = state.cmp.horizon;
         renderCompareAll();
