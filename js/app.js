@@ -517,8 +517,45 @@
   var CMP_MIN_N = 3, CMP_MIN_CELLS = 3;
   var CMP_HORIZONS = ["3M", "6M", "9M", "12M"];
 
+  var cmpCache = { key: null, value: null };
+
+  /* Nøgle for de input der kan ændre beregningen. overlapStart beregnes efter
+     dataene er hentet, så den indgår for at undgå et for tidligt cache-hit. */
+  function cmpKey() {
+    return [state.period, state.overlapStart,
+            Object.keys(state.cmp.bankData).length].join("|");
+  }
+
+  /* Fælles indgang til sammenligningen. Uden periodefilter er
+     comparison.json allerede regnet færdig af scraper/compare.py - så
+     genbruger vi den i stedet for at gentage rangeringen i JS (og risikerer
+     at de to implementationer glider fra hinanden). Er der filtreret, eller
+     mangler den præcomputerede version, regner vi selv - én gang pr. filter. */
+  function comparison() {
+    var cmp = state.cmp.comparison;
+    if (!cmp) return null;
+    var key = cmpKey();
+    if (cmpCache.key === key) return cmpCache.value;
+
+    var filtered = state.period !== "all" &&
+      (state.period === "overlap" ? state.overlapStart !== null : true);
+    var value;
+    if (!filtered && cmp.cells && cmp.championship) {
+      value = { cells: cmp.cells, championship: cmp.championship,
+                biasTable: cmp.bias_table, rdHitrate: cmp.rd_hitrate,
+                overall: cmp.overall };
+    } else {
+      value = computeComparison();
+    }
+    cmpCache.key = key;
+    cmpCache.value = value;
+    return value;
+  }
+
   /* Genberegner hele sammenligningen ud fra punkter i det valgte vindue.
-     Spejler logikken i scraper/compare.py. */
+     Bruges kun når periode-filteret er aktivt - uden filter genbruger
+     comparison() de færdige tal fra scraper/compare.py. Logikken her spejler
+     compare.py, så de to skal holdes i takt. */
   function computeComparison() {
     var cmp = state.cmp.comparison;
     function r2(v) { return Math.round(v * 100) / 100; }
@@ -586,9 +623,12 @@
       var errs = [], pubs = [];
       d.points.forEach(function (pt) {
         if (pt.err === null || !inWin(pt.pub)) return;
+        // Perioden dækker bankens data i vinduet - samme definition som i
+        // scraper/compare.py, hvor den ikke er begrænset til F3/F5.
+        pubs.push(pt.pub);
         var c = map[pt.p];
         if ((c === "F3" || c === "F5") && CMP_HORIZONS.indexOf(pt.h) !== -1) {
-          errs.push(pt.err); pubs.push(pt.pub);
+          errs.push(pt.err);
         }
       });
       biasTable[b] = jsSummarize(errs);
@@ -621,7 +661,7 @@
 
   function renderChamp() {
     var cmp = state.cmp.comparison;
-    var cc = computeComparison();
+    var cc = comparison();
     var tb = document.querySelector("#champ-table tbody");
     tb.innerHTML = "";
     cc.championship.forEach(function (c, i) {
@@ -657,7 +697,7 @@
   function buildCmpProducts() {
     var cmp = state.cmp.comparison;
     var seen = {};
-    computeComparison().cells.forEach(function (c) { seen[c.product] = true; });
+    comparison().cells.forEach(function (c) { seen[c.product] = true; });
     var sel = document.getElementById("cmp-product");
     sel.innerHTML = "";
     Object.keys(seen).sort().forEach(function (p) {
@@ -757,7 +797,7 @@
     var cmp = state.cmp.comparison;
     var P = state.cmp.product, H = state.cmp.horizon;
     var cell = null;
-    computeComparison().cells.forEach(function (c) {
+    comparison().cells.forEach(function (c) {
       if (c.product === P && c.horizon === H) cell = c;
     });
     var hName = { "3M": "3 mdr.", "6M": "6 mdr.", "9M": "9 mdr.", "12M": "12 mdr." }[H];
@@ -791,7 +831,7 @@
   function renderHitrate() {
     destroyChart("hitrate");
     var cmp = state.cmp.comparison;
-    var rdHitrate = computeComparison().rdHitrate;
+    var rdHitrate = comparison().rdHitrate;
     var order = { "3M": 0, "6M": 1, "9M": 2, "12M": 3 };
     var hs = Object.keys(rdHitrate).sort(function (a, b) {
       return (order[a] === undefined ? 9 : order[a]) - (order[b] === undefined ? 9 : order[b]);
@@ -944,7 +984,7 @@
 
   function renderPodium() {
     var cmp = state.cmp.comparison;
-    var overall = computeComparison().overall;
+    var overall = comparison().overall;
     var excluded = Object.keys(overall).filter(function (b) {
       var o = overall[b];
       return o.mae === null || (o.n || 0) < PODIUM_MIN_N;

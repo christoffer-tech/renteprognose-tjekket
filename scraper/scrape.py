@@ -44,7 +44,15 @@ def fetch_live(mod) -> str:
     return fetch(mod.PAGE_URL, headers=BANK_HEADERS.get(mod.BANK_ID))
 
 
-def cmd_update(bank_ids: list[str]) -> None:
+def cmd_update(bank_ids: list[str]) -> bool:
+    """Hent live-sider. Returnerer False hvis *alle* banker fejlede.
+
+    Enkelte fejlende banker er normale (midlertidig udfald, ændret markup) og
+    må ikke vælte hele kørslen. Men fejler alle, er det et netværks- eller
+    parser-nedbrud, og så skal CI fejle i stedet for at gå grøn igennem med
+    uændrede data.
+    """
+    failed: list[str] = []
     for bank_id in bank_ids:
         mod = BANKS[bank_id]
         print(f"[{bank_id}] Henter live-side...", flush=True)
@@ -52,11 +60,14 @@ def cmd_update(bank_ids: list[str]) -> None:
             html = fetch_live(mod)
         except RuntimeError as e:
             print(f"[{bank_id}] FEJL: {e}", flush=True)
+            failed.append(bank_id)
             continue
         today = dt.date.today().isoformat()
         snap = mod.parse_snapshot(html, "live", None, today)
         if snap is None:
-            print(f"[{bank_id}] FEJL: kunne ikke parse prognosetabellen", flush=True)
+            print(f"[{bank_id}] FEJL: kunne ikke parse prognosetabellen",
+                  flush=True)
+            failed.append(bank_id)
             continue
         print(f"[{bank_id}] pub={snap['pub_date']} produkter={sorted(snap['rows'])}",
               flush=True)
@@ -75,6 +86,14 @@ def cmd_update(bank_ids: list[str]) -> None:
         out.write_text(json.dumps(snap, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"[{bank_id}] gemt {out.name}", flush=True)
         cmd_update_extra(bank_id, html if bank_id == "sydbank" else None)
+
+    if bank_ids and len(failed) == len(bank_ids):
+        print(f"FEJL: alle {len(bank_ids)} banker fejlede - afbryder", flush=True)
+        return False
+    if failed:
+        print(f"Advarsel: {len(failed)} af {len(bank_ids)} banker fejlede: "
+              f"{', '.join(failed)}", flush=True)
+    return True
 
 
 def _save_if_new(bank_id: str, snap: dict, filename: str) -> None:
@@ -273,7 +292,8 @@ def main() -> None:
         return
     bank_ids = [args.bank] if args.bank else sorted(BANKS)
     if args.cmd == "update":
-        cmd_update(bank_ids)
+        if not cmd_update(bank_ids):
+            raise SystemExit(1)
     else:
         cmd_backfill(bank_ids, since=args.since,
                      collapse=None if args.full else "digest")

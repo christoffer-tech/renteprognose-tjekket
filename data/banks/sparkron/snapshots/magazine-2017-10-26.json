@@ -1,0 +1,69 @@
+{
+ "bank": "sparkron",
+ "source": "magazine",
+ "capture": null,
+ "obs_date": "2017-10-26",
+ "pub_date": "2017-10-26",
+ "recalc_date": null,
+ "targets": [
+  "2018-01-26",
+  "2018-10-26"
+ ],
+ "rows": {
+  "cibor3": {
+   "name": "cibor3",
+   "aktuelt": -0.31,
+   "forecasts": [
+    -0.25,
+    -0.15
+   ]
+  },
+  "fkort": {
+   "name": "fkort",
+   "aktuelt": -0.28,
+   "forecasts": [
+    -0.25,
+    -0.15
+   ]
+  },
+  "f5": {
+   "name": "f5",
+   "aktuelt": 0.18,
+   "forecasts": [
+    0.35,
+    0.6
+   ]
+  },
+  "fast30": {
+   "name": "fast30",
+   "aktuelt": 2.13,
+   "forecasts": [
+    2.3,
+    2.65
+   ]
+  }
+ },
+ "raw_rows": {
+  "cibor3": [
+   -0.31,
+   -0.25,
+   -0.15
+  ],
+  "fkort": [
+   -0.28,
+   -0.25,
+   -0.15
+  ],
+  "f5": [
+   0.18,
+   0.35,
+   0.6
+  ],
+  "fast30": [
+   2.13,
+   2.3,
+   2.65
+  ]
+ },
+ "pdf_month": "oktober2017"
+}

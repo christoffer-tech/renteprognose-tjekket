@@ -1,8 +1,8 @@
 name: Opdater renteprognose-data
 
-# Henter den aktuelle prognose fra Nykredit én gang om ugen,
-# genbygger dataset.json og committer ændringerne, så
-# GitHub Pages-siden altid viser friske tal.
+# Henter de aktuelle prognoser fra alle banker én gang om ugen, genbygger
+# datasættene og committer ændringerne, så GitHub Pages altid viser friske
+# tal. Valideringen nedenfor er en gate: fejler den, committes der intet.
 on:
   schedule:
     - cron: "0 6 * * 1" # mandage kl. 06:00 UTC
@@ -10,6 +10,12 @@ on:
 
 permissions:
   contents: write
+
+# To samtidige kørsler ville skrive til de samme datafiler og kollidere på
+# push. Lad den igangværende køre færdig i stedet for at afbryde den.
+concurrency:
+  group: opdater-renteprognose
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -20,6 +26,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scraper/requirements.txt
 
       - name: Installer afhængigheder
         run: pip install -r scraper/requirements.txt
@@ -30,11 +38,17 @@ jobs:
       - name: Hent RD's historiske FlexLån-renter (facit)
         run: python scraper/scrape.py facit-rd
 
+      - name: Validér de rå snapshots
+        run: python scraper/validate_banks.py
+
       - name: Genbyg datasæt (alle banker)
         run: python scraper/build.py all
 
       - name: Genbyg bank-sammenligning
         run: python scraper/compare.py
+
+      - name: Validér datasættene (gate før commit)
+        run: python scraper/validate.py
 
       - name: Commit nye data (hvis ændret)
         run: |

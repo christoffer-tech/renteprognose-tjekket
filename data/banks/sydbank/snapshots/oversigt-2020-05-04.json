@@ -1,0 +1,56 @@
+{
+ "bank": "sydbank",
+ "source": "wayback-oversigt",
+ "capture": "20200517",
+ "obs_date": "2020-05-17",
+ "pub_date": "2020-05-04",
+ "recalc_date": null,
+ "targets": [
+  "2020-12-31",
+  "2021-12-31"
+ ],
+ "rows": {
+  "stat10": {
+   "name": "stat10",
+   "aktuelt": -0.14,
+   "forecasts": [
+    -0.3,
+    -0.2
+   ]
+  },
+  "cibor3": {
+   "name": "cibor3",
+   "aktuelt": -0.39,
+   "forecasts": [
+    -0.35,
+    -0.25
+   ]
+  },
+  "fast30": {
+   "name": "fast30",
+   "aktuelt": 1.42,
+   "forecasts": [
+    1.2,
+    1.3
+   ]
+  }
+ },
+ "raw_rows": {
+  "stat10": [
+   -0.14,
+   -0.3,
+   -0.2
+  ],
+  "cibor3": [
+   -0.39,
+   -0.35,
+   -0.25
+  ],
+  "fast30": [
+   1.42,
+   1.2,
+   1.3
+  ]
+ },
+ "actual_year": "2019"
+}

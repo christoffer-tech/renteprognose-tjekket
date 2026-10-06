@@ -74,7 +74,32 @@ def dataset_path(bank: str) -> Path:
     return p
 
 
-def load_snapshots(bank: str) -> list[dict]:
+# Felter i et snapshot der beskriver *observationen* (facit) frem for
+# prognosen. De maa ikke indgaa i dublet-noeglen: samme prognose genudgives
+# typisk flere gange med aendret 'Aktuelt', og uden dette ville hver
+# optagelse blive talt som et selvstaendigt datapunkt.
+OBS_FIELDS = ("aktuelt", "name")
+# Felter paa snapshot-niveau der kun siger noget om optagelsen.
+SNAP_OBS_FIELDS = ("source", "capture", "obs_date")
+
+
+def forecast_identity(s: dict) -> str:
+    """Noegle der identificerer selve prognosen, ikke observationen.
+
+    Alle feltet bortset fra 'Aktuelt' og rækkenavnet indgaar. To optagelser der
+    kun adskiller sig ved, hvilken dag facit blev laest, faar dermed samme
+    noegle og tælles som én prognose.
+    """
+    core = {k: v for k, v in s.items()
+            if k not in SNAP_OBS_FIELDS and k != "rows"}
+    rows = {
+        p: {k: v for k, v in (row or {}).items() if k not in OBS_FIELDS}
+        for p, row in (s.get("rows") or {}).items()
+    }
+    return json.dumps({**core, "rows": rows}, sort_keys=True)
+
+
+def load_snapshots(bank: str, verbose: bool = True) -> list[dict]:
     d = snap_dir(bank)
     snaps = []
     for f in sorted(d.glob("*.json")):
@@ -83,15 +108,12 @@ def load_snapshots(bank: str) -> list[dict]:
         except (json.JSONDecodeError, OSError) as e:
             print(f"[{bank}] ADVARSEL: springer {f.name} over ({e})")
     snaps.sort(key=lambda s: (s.get("pub_date") or "", s.get("capture") or ""))
-    # Dublet: samme publiceringsdato og samme prognosticerede vaerdier. Obs-
-    # datoen (capture-datoen) skal indgå i noeglen - ellers tæller 96 captures
-    # af én og samme prognose som 96 uafhængige observationer. Ved dublet
-    # beholder vi den seneste (dvs. capture med friskest 'Aktuelt').
+    # Dublet: samme publiceringsdato og samme prognosticerede vaerdier.
+    # Ved dublet beholder vi den seneste (dvs. capture med friskest 'Aktuelt').
     latest: dict[str, dict] = {}
     for s in snaps:
-        core = {k: v for k, v in s.items() if k not in ("source", "capture", "obs_date")}
-        latest[json.dumps(core, sort_keys=True)] = s
-    if len(latest) != len(snaps):
+        latest[forecast_identity(s)] = s
+    if verbose and len(latest) != len(snaps):
         print(f"[{bank}] {len(snaps) - len(latest)} dublet-snapshots fjernet")
     return sorted(latest.values(), key=lambda s: (s["pub_date"], s.get("capture") or ""))
 
@@ -203,8 +225,16 @@ def build_bank(bank: str) -> dict:
     interpolate = (bank == "rd")
     max_gap = RD_MAX_GAP_DAYS if bank == "rd" else MAX_FACIT_GAP_DAYS
 
-    points: list[dict] = []
+    # Punkt-niveau-dubletter: samme (produkt, publiceringsdato, måldato) kan
+    # optræde i flere snapshots, fordi banken genudgiver samme prognose med
+    # ændret 'Aktuelt'. Det er ét udsagn og skal tælles én gang - ellers vejer
+    # netop de prognoser, der er arkiveret flest gange, tungest i metrics.
+    # Ved dublet beholder vi punktet fra den nyeste capture (friskest facit).
+    unique: dict[tuple[str, str, str], dict] = {}
+    dupes = 0
     for s in snaps:
+        # snaps er sorteret på (pub_date, capture), så senere optagelser af
+        # samme prognose overskriver ældre - vi ender med det friskeste facit.
         pub = s["pub_date"]
         snap_targets = [t for t in (s.get("targets") or []) if t]
         for p, row in s.get("rows", {}).items():
@@ -233,14 +263,29 @@ def build_bank(bank: str) -> dict:
                     err = round(act - fc, 3)
                     if lo is not None:
                         hit = bool(lo <= act <= hi)
-                points.append({
+                key = (p, pub, target)
+                pt = {
                     "p": p, "pub": pub, "target": target,
                     "h": horizon_bucket(pub, target),
                     "fc": fc, "fc_lo": lo, "fc_hi": hi,
                     "act": act, "act_date": act_date,
                     "err": err, "hit": hit, "gap_days": gap_days,
-                })
+                }
+                prev = unique.get(key)
+                if prev is not None:
+                    dupes += 1
+                    # Nyeste capture vinder, MEN et punkt med facit maa ikke
+                    # overskrives af et uden - så ville prognosen falde ud af
+                    # metrics, fordi den seneste optagelse lå uden for
+                    # facit-vinduet.
+                    if prev["act"] is not None and act is None:
+                        continue
+                unique[key] = pt
+    if dupes:
+        print(f"[{bank}] {dupes} gentagne prognosepunkter (samme pub+måldato) "
+              f"slået sammen")
 
+    points = list(unique.values())
     points.sort(key=lambda x: (x["p"], x["pub"], x["target"]))
 
     horizons = sorted({x["h"] for x in points})
