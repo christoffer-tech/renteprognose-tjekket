@@ -33,7 +33,7 @@
 
   /* Lodrette markeringer: 'i dag' og den seneste faktiske observation. Uden
      den sidste ser det ud som om facit-linjen bare stopper uden grund. */
-  function vline(value, label, dash) {
+  function vline(value, label, dash, atBottom) {
     return {
       afterDraw: function (chart) {
         var x = chart.scales.x;
@@ -55,7 +55,10 @@
         var w = ctx.measureText(label).width;
         var tx = px + 5;
         if (tx + w > area.right) tx = px - 5 - w;
-        ctx.fillText(label, tx, area.top + 12);
+        // Nogle gange ligger "i dag" og "seneste facit" få uger fra hinanden.
+        // Så lægges den ene etikette i bunden, saa de ikke skriver oven i
+        // hinanden.
+        ctx.fillText(label, tx, atBottom ? area.bottom - 4 : area.top + 12);
         ctx.restore();
       }
     };
@@ -63,13 +66,13 @@
   var todayLinePlugin = {
     id: "todayLine",
     afterDraw: (function () {
-      var draw = vline(Date.now(), "i dag", [5, 4]).afterDraw;
+      var draw = vline(Date.now(), "i dag", [5, 4], false).afterDraw;
       return draw;
     })()
   };
   function lastObsPlugin(ts, label) {
     if (!ts) return null;
-    return { id: "lastObs", afterDraw: vline(ts, label, [2, 3]).afterDraw };
+    return { id: "lastObs", afterDraw: vline(ts, label, [2, 3], true).afterDraw };
   }
 
   /* På smalle skærme overlapper datoetiketterne, så vi viser færre. */
@@ -249,9 +252,11 @@
       };
     });
 
-    var actual = (d.actuals[p] || []).map(function (a) {
+    var actualAll = (d.actuals[p] || []).map(function (a) {
       return { x: parseDate(a[0]), y: a[1] };
     });
+    // Datasættet sættes først nedenfor, når aksen er kendt — se actualAll.
+    var actual = actualAll;
     datasets.push({
       label: "Facit (faktisk rente)",
       data: actual,
@@ -279,7 +284,18 @@
     // et kvartal efter den seneste observation (dog mindst til i dag).
     var obs = (d.actuals[p] || []).map(function (a) { return parseDate(a[0]); });
     var lastObsTs = obs.length ? Math.max.apply(null, obs) : null;
-    var xMax = Math.max(lastObsTs || 0, Date.now()) + 120 * DAY;
+    var horizonDays = (typeof window !== "undefined" && window.innerWidth < 760) ? 240 : 120;
+    var xMax = Math.max(lastObsTs || 0, Date.now()) + horizonDays * DAY;
+
+    // Klip facit-serien til det viste vindue. Uden dette sendes alle
+    // observationer til grafen, også dem der ligger før vinduet; de tegnes
+    // langt uden for lærredet, og linjen derfra ind i vinduet giver et skævt,
+    // sammenpresset forløb.
+    var pad = 30 * DAY;
+    actual = actualAll.filter(function (q) {
+      return q.x >= xMin - pad && q.x <= xMax + pad;
+    });
+    datasets[datasets.length - 1].data = actual;
 
     var ctx = document.getElementById("chart-main");
     var obsMarker = lastObsTs ? lastObsPlugin(lastObsTs, "seneste facit") : null;
