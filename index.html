@@ -3,147 +3,197 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Renteprognose-tjekket – Hvor præcise er Nykredits renteprognoser?</title>
-<meta name="description" content="Uafhængig tracking af Nykredits renteprognoser: sammenligner hver prognose med det faktiske renteniveau og visualiserer træfsikkerheden.">
-<link rel="stylesheet" href="css/style.css?v=3">
+<title>Renteprognose-tjekket – hvor præcist har bankerne spået renten?</title>
+<meta name="description" content="Uafhængig tracking af seks danske bankers renteprognoser: hver eneste prognose holdt op mod det faktiske renteniveau, med fejl, bias og rangering.">
+<meta property="og:title" content="Renteprognose-tjekket – hvor præcist har bankerne spået renten?">
+<meta property="og:description" content="Hver prognose fra seks banker holdt op mod facit. Gennemsnitlig fejl: 0,25 procentpoint for lavt.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#123A63">
+<link rel="stylesheet" href="css/style.css?v=4">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-<script src="js/app.js?v=3" defer></script>
+<script src="js/app.js?v=4" defer></script>
 </head>
 <body>
 
-<header class="site-header">
+<header class="topbar">
   <div class="wrap">
-    <div class="brand">Renteprognose-tjekket</div>
+    <div class="brand">Renteprognose<span>-tjekket</span></div>
     <nav>
       <a href="#overblik">Overblik</a>
-      <a href="#produkter">Prognoser vs. facit</a>
+      <a href="#produkter">Prognoser mod facit</a>
       <a href="#scoreboard">Scoreboard</a>
       <a href="#sammenlign">Sammenlign banker</a>
-      <a href="#metode">Metode &amp; data</a>
+      <a href="#metode">Metode</a>
     </nav>
   </div>
 </header>
 
 <main>
-  <!-- HERO / OVERBLIK -->
+
+  <!-- ============ OVERBLIK ============ -->
   <section id="overblik" class="hero">
     <div class="wrap">
-      <h1>Bankerne spår renterne. Vi gemmer kvitteringen.</h1>
+      <div class="kicker" id="hero-kicker">Seks banker · samlet overblik</div>
+      <h1 class="answer" id="hero-answer">Bankerne har i gennemsnit spået renten <em>0,25 procentpoint for lavt</em>.</h1>
+      <p class="subanswer" id="hero-sub">Når bankerne tager fejl, er det oftest i retning af, at lånet bliver
+        dyrere end lovet — ikke billigere.</p>
       <p class="lede">
-        Hver måned fortæller bankerne os, hvor renten er på vej hen. Vi tracker
-        <strong>hver eneste prognose fra 6 banker</strong> og holder den op mod facit –
-        så du kan se, hvem der rammer plet, og hvem der spår i blinde.
-        Vælg en bank herunder og se dens fulde regnskab.
+        Hver måned fortæller bankerne os, hvor renten er på vej hen. Vi tracker <strong>hver eneste
+        prognose fra seks banker</strong> og holder den op mod facit — så du kan se, hvem der rammer plet,
+        og hvem der spår i blinde. Vælg en bank og se dens fulde regnskab.
       </p>
-      <div class="bank-picker" id="bank-picker" role="tablist" aria-label="Vælg bank"></div>
-      <div class="period-picker" role="group" aria-label="Vælg periode">
-        <span class="period-label">Periode:</span>
-        <button type="button" data-period="all" class="active">Alt</button>
-        <button type="button" data-period="1y">Seneste 1 år</button>
-        <button type="button" data-period="3y">Seneste 3 år</button>
-        <button type="button" data-period="overlap">Overlappende</button>
+    </div>
+  </section>
+
+  <!-- ============ FILTRE (styrer hele siden) ============ -->
+  <div class="filters">
+    <div class="wrap">
+      <div class="fgroup">
+        <span class="kicker">Bank</span>
+        <div class="bank-picker" id="bank-picker" role="tablist" aria-label="Vælg bank"></div>
+      </div>
+      <div class="fgroup">
+        <span class="kicker">Periode</span>
+        <div class="period-picker" role="group" aria-label="Vælg periode">
+          <button type="button" data-period="all" class="active">Alt</button>
+          <button type="button" data-period="1y">Seneste 1 år</button>
+          <button type="button" data-period="3y">Seneste 3 år</button>
+          <button type="button" data-period="overlap">Overlappende</button>
+        </div>
         <span class="period-window" id="period-window"></span>
       </div>
-      <div class="stat-grid">
-        <div class="stat">
-          <div class="stat-value" id="stat-bias">–</div>
-          <div class="stat-label">Gennemsnitlig fejl (alle renter)</div>
-          <div class="stat-sub">positiv = renten blev <em>højere</em> end spået</div>
+    </div>
+  </div>
+
+  <!-- ============ NØGLETAL + BIAS ============ -->
+  <section class="kpis-section">
+    <div class="wrap">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="v num" id="stat-bias">–</div>
+          <div class="l">Gennemsnitlig fejl</div>
+          <div class="s">positiv = renten blev højere end spået</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="stat-opt">–</div>
-          <div class="stat-label">Andel for optimistiske</div>
-          <div class="stat-sub">dvs. den spåede rente lå under facit</div>
+        <div class="kpi">
+          <div class="v num" id="stat-opt">–</div>
+          <div class="l">For optimistiske</div>
+          <div class="s">den spåede rente lå under facit</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="stat-pess">–</div>
-          <div class="stat-label">Andel for pessimistiske</div>
-          <div class="stat-sub">dvs. den spåede rente lå over facit</div>
+        <div class="kpi">
+          <div class="v num" id="stat-pess">–</div>
+          <div class="l">For pessimistiske</div>
+          <div class="s">den spåede rente lå over facit</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="stat-n">–</div>
-          <div class="stat-label">Prognoser med facit</div>
-          <div class="stat-sub" id="stat-period">–</div>
+        <div class="kpi">
+          <div class="v num" id="stat-n">–</div>
+          <div class="l">Prognoser med facit</div>
+          <div class="s" id="stat-period">–</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="stat-worst">–</div>
-          <div class="stat-label">Største fejlskud</div>
-          <div class="stat-sub" id="stat-worst-sub">–</div>
+        <div class="kpi">
+          <div class="v num over" id="stat-worst">–</div>
+          <div class="l">Største fejlskud</div>
+          <div class="s" id="stat-worst-sub">–</div>
         </div>
       </div>
+
       <div class="meter-block">
-        <div class="meter-title">Bias-meteret <span class="meter-hint">– hælder fejlene til den optimistiske eller pessimistiske side?</span></div>
+        <div class="kicker">Bias-meter — hælder fejlene til den optimistiske eller pessimistiske side?</div>
         <div class="meter">
-          <div class="meter-zone left"><span>For pessimistiske</span></div>
-          <div class="meter-zone right"><span>For optimistiske</span></div>
           <div class="meter-marker" id="meter-marker"></div>
         </div>
         <div class="meter-scale"><span>−1 pp</span><span>0</span><span>+1 pp</span></div>
+        <div class="meter-ends">
+          <span class="under">← For pessimistiske</span>
+          <span class="over">For optimistiske →</span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- SKAM-SKAMMELEN -->
-  <section id="skam" class="podium-section">
+  <!-- ============ SAMLET FEJLSKUD ============ -->
+  <section id="skam" class="fejlskud-section">
     <div class="wrap">
-      <h2>Skam-skammelen</h2>
-      <p class="section-intro light">
-        De tre banker med de <strong>største gennemsnitlige fejlskud</strong> –
-        målt på alt, de har spået. Klik på en bank for at se dens fulde regnskab nedenfor.
+      <div class="shead">
+        <h2>Samlet fejlskud pr. bank</h2>
+        <span class="hint">middel absolut fejl på alt, banken har spået</span>
+      </div>
+      <p class="sdesc">
+        Den grove rangering: hvor meget rammer hver bank ved siden af, når man lægger alle dens
+        prognoser sammen? Klik på en bank for at se dens fulde regnskab nedenfor.
       </p>
       <div class="podium" id="podium"></div>
-      <p class="podium-note" id="podium-note">Skammelen måler den rene gennemsnitsfejl (MAE).
-        Den fair disciplin-for-disciplin-sammenligning finder du i
-        <a href="#sammenlign">mesterskabet</a> længere nede.</p>
+      <p class="podium-note" id="podium-note"></p>
     </div>
   </section>
 
-  <!-- PRODUKT-GRAFER -->
+  <!-- ============ PROGNOSER MOD FACIT ============ -->
   <section id="produkter" class="section">
     <div class="wrap">
-      <div class="bank-picker light" id="bank-picker-2" role="tablist" aria-label="Vælg bank"></div>
-      <h2><span id="bank-name-produkter">Nykredit</span>s prognoser mod facit</h2>
-      <p class="section-intro">
-        Den <strong>sorte linje</strong> er den faktiske rente. Hver <strong>tynd linje</strong>
-        er én prognose fra en given dato – den starter ved det dengang aktuelle niveau
-        og viser, hvor renten blev spået hen. Hold musen over linjerne for at se datoen.
-        Prognoser der rækker ud i fremtiden har endnu ikke fået facit.
+      <div class="shead">
+        <h2>Prognoser mod facit</h2>
+        <span class="hint"><span id="bank-name-produkter">Nykredit</span> · alle historiske prognoser</span>
+      </div>
+      <p class="sdesc">
+        Den tykke linje er den faktiske rente. Hver tynd linje er én prognose fra en given dato — den
+        starter ved det dengang aktuelle niveau og viser, hvor renten blev spået hen. Jo længere en
+        prognose rækker ud i fremtiden, jo mere falder den typisk ved siden af.
       </p>
-      <div class="tabs" id="product-tabs" role="tablist"></div>
+
+      <div class="bank-picker light" id="bank-picker-2" role="tablist" aria-label="Vælg bank"></div>
+
+      <div class="tabs" id="product-tabs" role="tablist" aria-label="Vælg lånetype"></div>
       <div class="chart-controls">
         <label><input type="checkbox" id="toggle-all" checked> Vis alle historiske prognoser</label>
         <span class="chart-hint">(fjern fluebenet for kun at se de seneste 6)</span>
       </div>
-      <div class="chart-card">
+
+      <div class="card">
         <h3 id="chart-title">–</h3>
-        <div class="chart-box"><canvas id="chart-main"></canvas><p class="chart-empty" id="empty-main" hidden>Ingen prognoser i den valgte periode.</p></div>
+        <div class="chart-box">
+          <canvas id="chart-main"></canvas>
+          <p class="chart-empty" id="empty-main" hidden>Ingen prognoser i den valgte periode.</p>
+        </div>
       </div>
-      <div class="chart-card">
-        <h3>Prognosefejlen over tid <span class="h3-sub">– facit minus prognose, i procentpoint</span></h3>
+
+      <div class="card">
+        <h3>Prognosefejlen over tid <span class="h3-sub">facit minus prognose, i procentpoint</span></h3>
         <p class="chart-explain">
-          Hver prik er én prognose, placeret ved den dato den Pegede på.
-          <strong class="up">Prikker over nul = for optimistisk</strong> (renten endte højere end spået).
-          <strong class="down">Prikker under nul = for pessimistisk.</strong>
+          Hver prik er én prognose, placeret ved den dato den pegede på.
+          <strong class="over">Over nul = for optimistisk</strong> (renten endte højere end spået).
+          <strong class="under">Under nul = for pessimistisk.</strong>
         </p>
-        <div class="chart-box"><canvas id="chart-error"></canvas><p class="chart-empty" id="empty-error" hidden>Ingen prognoser i den valgte periode.</p></div>
+        <div class="chart-box">
+          <canvas id="chart-error"></canvas>
+          <p class="chart-empty" id="empty-error" hidden>Ingen prognoser i den valgte periode.</p>
+        </div>
       </div>
-      <div class="chart-card">
-        <h3>Fejl pr. horisont <span class="h3-sub">– rammer de bedre på kort eller lang sigt?</span></h3>
-        <div class="chart-box chart-box-sm"><canvas id="chart-horizon"></canvas><p class="chart-empty" id="empty-horizon" hidden>Ingen prognoser i den valgte periode.</p></div>
+
+      <div class="card">
+        <h3>Fejlen vokser med horisonten <span class="h3-sub">rammer de bedre på kort eller lang sigt?</span></h3>
+        <p class="chart-explain">
+          Gennemsnitlig fejl i procentpoint, fordelt på hvor langt prognosen pegede frem.
+        </p>
+        <div class="chart-box chart-box-sm">
+          <canvas id="chart-horizon"></canvas>
+          <p class="chart-empty" id="empty-horizon" hidden>Ingen prognoser i den valgte periode.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- SCOREBOARD -->
+  <!-- ============ SCOREBOARD ============ -->
   <section id="scoreboard" class="section section-alt">
     <div class="wrap">
-      <h2>Scoreboard: <span id="bank-name-score">Nykredit</span></h2>
-      <p class="section-intro">
-        Gennemsnitlig fejl (bias), middel absolut fejl (MAE) og andelen af for
-        optimistiske hhv. pessimistiske prognoser – pr. lånetype og pr. horisont.
-        Alt i procentpoint.
+      <div class="shead">
+        <h2>Scoreboard: <span id="bank-name-score">Nykredit</span></h2>
+        <span class="hint">alle horisonter</span>
+      </div>
+      <p class="sdesc">
+        Gennemsnitlig fejl (bias), middel absolut fejl og andelen af for optimistiske hhv. pessimistiske
+        prognoser — pr. lånetype. Alt i procentpoint.
       </p>
-      <label class="horizon-label">Horisont:
+
+      <label class="horizon-label">Horisont
         <select id="horizon-select">
           <option value="alle">Alle horisonter</option>
           <option value="3M">3 måneder</option>
@@ -152,55 +202,55 @@
           <option value="12M">12 måneder</option>
         </select>
       </label>
-      <div class="table-scroll">
-        <table id="score-table">
+
+      <div class="card tablewrap">
+        <div class="tablewrap"><table id="score-table">
           <thead>
-            <tr><th>Lånetype</th><th>Antal</th><th>Gns. fejl (bias)</th>
-                <th>Middel absolut fejl</th><th>Andel for optimistiske</th><th>Andel for pessimistiske</th></tr>
+            <tr><th>Lånetype</th><th>Antal</th><th>Gns. fejl</th>
+                <th>Middel abs. fejl</th><th>Optimistiske</th><th>Pessimistiske</th></tr>
           </thead>
           <tbody></tbody>
-        </table>
+        </table></div>
       </div>
       <p class="table-note" id="score-note"></p>
     </div>
   </section>
 
-  <!-- SAMMENLIGN BANKER -->
+  <!-- ============ SAMMENLIGN BANKER ============ -->
   <section id="sammenlign" class="section">
     <div class="wrap">
-      <h2>Hvem rammer bedst? Bank-sammenligningen</h2>
-      <p class="section-intro">
-        Vi tracker også renteprognoserne fra <strong>Nordea, Sydbank, Jyske Bank,
-        Realkredit Danmark og Sparekassen Kronjylland</strong> – og stiller dem op
-        mod hinanden på de produkter og horisonter, de alle dækker. Hver bank måles
-        mod <strong>sit eget</strong> faktiske renteniveau, præcis som ovenfor.
+      <div class="shead">
+        <h2>Hvem rammer bedst?</h2>
+        <span class="hint">kun de produkter og horisonter bankerne alle dækker</span>
+      </div>
+      <p class="sdesc">
+        Bankerne har forskellig historiklængde og har været udsat for vidt forskellige renteforhold.
+        Rangeringen sker derfor kun på de discipliner, hvor mindst to banker kan måles direkte mod
+        hinanden — og mesterskabet er bankernes middelrang på tværs af dem.
       </p>
 
-      <div class="champ-card">
-        <h3>Mesterskabstabellen <span class="h3-sub">– middelrang på tværs af alle discipliner</span></h3>
+      <div class="card tablewrap">
+        <h3>Mesterskabstabellen <span class="h3-sub">middelrang på tværs af alle discipliner</span></h3>
         <p class="chart-explain" id="champ-explain">–</p>
-        <div class="table-scroll">
-          <table id="champ-table">
-            <thead>
-              <tr><th>#</th><th>Bank</th><th>Middelrang</th><th>Discipliner</th>
-                  <th>Delsejre</th><th>Bias F3+F5</th><th>Periode</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div class="tablewrap"><table id="champ-table">
+          <thead>
+            <tr><th>#</th><th>Bank</th><th>Middelrang</th><th>Discipliner</th>
+                <th>Delsejre</th><th>Bias F3+F5</th><th>Periode</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table></div>
       </div>
 
-      <div class="chart-card">
-        <h3>Head-to-head: prognosefejl pr. bank <span class="h3-sub">– samme produkt, samme horisont</span></h3>
+      <div class="card">
+        <h3>Head-to-head: samme produkt, samme horisont</h3>
         <p class="chart-explain">
-          Hver prik er én prognose fra én bank. Bankerne kan dermed sammenlignes direkte:
-          <strong>jo tættere på nul, desto bedre ramt.</strong>
+          Hver prik er én prognose fra én bank. Jo tættere på nul, jo bedre ramt.
         </p>
         <div class="compare-controls">
-          <label>Produkt:
+          <label>Produkt
             <select id="cmp-product"></select>
           </label>
-          <label>Horisont:
+          <label>Horisont
             <select id="cmp-horizon">
               <option value="3M">3 måneder</option>
               <option value="6M">6 måneder</option>
@@ -209,140 +259,112 @@
             </select>
           </label>
         </div>
-        <div class="chart-box"><canvas id="chart-compare"></canvas><p class="chart-empty" id="empty-compare" hidden>Ingen prognoser i den valgte periode.</p></div>
+        <div class="chart-box">
+          <canvas id="chart-compare"></canvas>
+          <p class="chart-empty" id="empty-compare" hidden>Ingen prognoser i den valgte periode.</p>
+        </div>
         <div class="legend" id="cmp-legend"></div>
       </div>
 
-      <div class="chart-card">
+      <div class="card tablewrap">
         <h3>Disciplin-rangliste <span class="h3-sub" id="cell-title">–</span></h3>
         <p class="chart-explain">Rangering efter middel absolut fejl (MAE) i den valgte disciplin.</p>
-        <div class="table-scroll">
-          <table id="cell-table">
-            <thead>
-              <tr><th>#</th><th>Bank</th><th>Antal</th><th>MAE</th><th>Bias</th>
-                  <th>Andel for optimistiske</th><th>Andel for pessimistiske</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div class="tablewrap"><table id="cell-table">
+          <thead>
+            <tr><th>#</th><th>Bank</th><th>Antal</th><th>MAE</th><th>Bias</th>
+                <th>Optimistiske</th><th>Pessimistiske</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table></div>
       </div>
 
-      <div class="chart-card">
-        <h3>Realkredit Danmarks intervaller: hvor ofte rammer de? <span class="h3-sub">– hit-rate</span></h3>
+      <div class="card">
+        <h3>Realkredit Danmarks intervaller: hvor ofte rammer de? <span class="h3-sub">hit-rate</span></h3>
         <p class="chart-explain">
-          Realkredit Danmark spår ikke ét tal, men et interval (fx 2,9–3,2 %).
-          Her er andelen af gange, hvor facit landede <strong>inde i intervallet</strong> –
-          fordelt på horisont. Jo længere ud i fremtiden, desto oftere rammer de forbi.
+          Realkredit Danmark spår ikke ét tal, men et interval (fx 2,9–3,2 %). Her er andelen af gange,
+          hvor facit landede <strong>inde i intervallet</strong> — fordelt på horisont.
         </p>
-        <div class="chart-box chart-box-sm"><canvas id="chart-hitrate"></canvas><p class="chart-empty" id="empty-hitrate" hidden>Ingen prognoser i den valgte periode.</p></div>
+        <div class="chart-box chart-box-sm">
+          <canvas id="chart-hitrate"></canvas>
+          <p class="chart-empty" id="empty-hitrate" hidden>Ingen prognoser i den valgte periode.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- METODE -->
+  <!-- ============ METODE ============ -->
   <section id="metode" class="section">
-    <div class="wrap narrow">
-      <h2>Metode &amp; data</h2>
-      <h3>Hvor kommer prognoserne fra?</h3>
-      <p>
-        Prognosetabellen hentes fra Nykredits side om renteprognosen – og fra de
-        tilsvarende sider hos Nordea, Realkredit Danmark, Sydbank, Jyske Bank og
-        Sparekassen Kronjylland – samt Sydbanks månedlige renteforventnings-PDF'er
-        og Nordeas og Sydbanks auktions-/refinansieringsartikler (samme tal,
-        anden form). Historiske prognoser (2011–2026) er genskabt fra
-        arkiverede kopi­er af siderne via
-        <a href="https://web.archive.org" rel="noopener">Wayback Machine</a> (Internet Archive),
-        inklusive ældre og spejlede udgaver af samme sider. Fremadrettet hentes den
-        aktuelle prognose automatisk én gang om ugen, så nye prognoser løbende kommer med.
-      </p>
-      <h3>Hvad sammenlignes der med?</h3>
-      <p>
-        Som <em>facit</em> bruges tabellens egen <em>Aktuelt</em>-kolonne fra det snapshot,
-        der ligger tættest på måldatoen (typisk få ugers afstand, maks. 60 dage).
-        Det sikrer, at prognose og facit bruger <strong>præcis samme rentedefinition</strong>
-        – fx er F1/F3/F5 kontantlånsrenter inkl. kursfradrag, og F-kort er CITA6 plus
-        rentetillæg. Til gengæld er facit månedsøjebliksbilleder, ikke dagskurser.
-      </p>
-      <h3>Hvad betyder "for optimistisk" og "for pessimistisk"?</h3>
-      <p>
-        Set fra låntagers synspunkt er en lav rente god. En prognose kaldes her
-        <em>for optimistisk</em>, når den spåede rente lå <strong>under</strong> det
-        faktiske niveau (positiv fejl = facit − prognose) – og <em>for
-        pessimistisk</em>, når den spåede rente lå <strong>over</strong> det faktiske
-        niveau (negativ fejl). Begge dele er fejlskud; siden viser begge sider lige meget.
-        Renterne er afrundet til én decimal, præcis som bankerne selv afrunder dem.
-      </p>
-      <h3>Forbehold</h3>
-      <ul>
-        <li>Produktsortimentet har ændret sig over tid: CITA-rækkerne og F-kort kom til
-          senere, og kuponen på de faste lån er skiftet (fx 3 % → 4 %). Det fremgår af rådataene.</li>
-        <li>Tidsskrift-arkiveringen er ikke komplet – der kan mangle enkelte måneder.</li>
-        <li>Dette er et uafhængigt hobbyprojekt uden tilknytning til Nykredit.
-          Intet her er investerings- eller lånerådgivning.</li>
-      </ul>
+    <div class="wrap">
+      <div class="shead"><h2>Metode &amp; data</h2></div>
+      <p class="sdesc">Alle tal på siden kan hentes frit. Kort fortalt gør vi følgende:</p>
+
+      <div class="method">
+        <div>
+          <h3>Hvad er facit?</h3>
+          <p>Vi bruger bankernes <em>egen</em> ”Aktuelt”-kolonne fra det snapshot, der ligger tættest på
+            prognosens måldato. Dermed måles prognosen med præcis samme rentedefinition, som banken selv
+            bruger — fx er F1/F3/F5 kontantlånsrenter inkl. kursfradrag.</p>
+        </div>
+        <div>
+          <h3>Hvordan beregnes fejlen?</h3>
+          <p>Fejl = facit − prognose. En <strong>positiv</strong> fejl betyder, at renten blev højere end
+            spået — prognosen var altså for optimistisk set fra låntagers synspunkt. Renterne er afrundet
+            til én decimal, præcis som bankerne selv afrunder dem.</p>
+        </div>
+        <div>
+          <h3>Tælles hver prognose én gang?</h3>
+          <p>Ja. Bankerne genudgiver jævnligt samme prognosedato, og arkivet tager mange kopier. Vi tæller
+            hver unikke prognose én gang — ellers ville en side, der blev arkiveret 96 gange, veje 96
+            gange tungere end en enkelt optagelse.</p>
+        </div>
+        <div>
+          <h3>Hvor langt tilbage?</h3>
+          <p>Historikken er genskabt fra Internet Archive og går tilbage til 2011 for Sydbank og 2012 for
+            Realkredit Danmark. Fremadrettet hentes nye prognoser automatisk hver uge.</p>
+        </div>
+      </div>
+
       <h3>Hvordan sammenlignes bankerne?</h3>
       <p>
-        Hver bank måles mod <strong>sit eget</strong> faktiske renteniveau
-        (egen Aktuelt-kolonne – for Realkredit Danmark dog deres historiske
-        FlexLån-serie). Rangeringen sker kun på <strong>fællesmængden</strong>:
-        pr. (produkt, horisont)-disciplin med mindst 2 banker rangeres der efter
-        middel absolut fejl (MAE), og mesterskabet er bankernes middelrang på
-        tværs af discipliner.
+        Hver bank måles mod <strong>sit eget</strong> faktiske renteniveau (egen Aktuelt-kolonne — for
+        Realkredit Danmark dog deres historiske FlexLån-serie). Rangeringen sker kun på
+        <strong>fællesmængden</strong>: pr. (produkt, horisont)-disciplin med mindst 2 banker rangeres der
+        efter middel absolut fejl (MAE), og mesterskabet er bankernes middelrang på tværs af discipliner.
       </p>
       <ul>
-        <li><strong>Nordea:</strong> F1/F3/F5, 4 % obligationslån (effektiv rente),
-          CITA6/CIBOR3/CIBOR6 uden tillæg. Historik fra 2019. Første kolonne er aktuel værdi.
-          Hertil auktionsprognoserne på nordea.com (3 stk/år: "Forventninger til
-          F1-/F3-/F5-renten"), hver med én prognose pr. låntype plus dagens rente.</li>
-        <li><strong>Sydbank:</strong> F-kort/F3/F5, Cita3M/Cibor3M samt 10-årig stat
-          og 30-årig realkreditrente. Relative horisonter (0-3/3-6/6-12 mdr.).
-          Historik fra 2011 via den ældre renteforventningsside, hvor kun
-          30-årig og 3-årig realkreditrente blev spået (den korte 3-års rente
-          lå på F-kort-niveau og tæller som F-kort – ikke at forveksle med
-          PDF'ernes 3-års rente, som er en ægte 3-års rente og tæller som F3) –
-          suppleret med de
-          månedlige renteforventnings-PDF'er (samme tal, 2022 og frem) og de
-          kvartalsvise refinansieringsartikler (F1/F3/F5 for næste refinansiering).</li>
-        <li><strong>Jyske Bank:</strong> Rentetilpasning F1/F3/F5
-          <em>ekskl. kursfradrag</em>. Det svarer til ca. +0,3/+0,2/+0,2 pp på
-          selve renteniveauet, men fejlene er upåvirkede, fordi både prognose og
-          facit er ekskl. fradrag – derfor er niveauerne ikke justeret i
-          graferne her. Historik fra 2024 – arkivet har ingen ældre
-          prognosetabel, heller ikke under tidligere URL'er. 'Fast 30 år' er en flad kupon
-          og indgår ikke i rangeringen.</li>
-        <li><strong>Realkredit Danmark:</strong> FlexLån F1/F3/F5 som intervaller –
-          fejl måles mod intervallets midtpunkt, og hit-rate viser hvor ofte facit
-          ramte intervallet. FlexKort har egen Aktuelt-kolonne. Historik fra 2012 via
-          den gamle SharePoint-side og erhvervsspejlet af prognosesiden. RD's FlexLån-facit publiceres kun 1. januar og
-          1. april, så der interpoleres lineært mellem observationerne.</li>
-        <li><strong>Sparekassen Kronjylland:</strong> Cita3, F-kort, F1/F3/F5 og
-          fast 30-årig med horisonterne +6 og +12 måneder. F-kort og
-          tilpasningsrenter er uden tillæg/kursfradrag (som Jyske). Historik fra 2022
-          (alle captures inkl. spejlesiderne /da/, lommepenge og kron) –
-          ældre "månedsprognoser" er prosatekst uden rentetabel.</li>
-        <li><strong>Totalkredit</strong> er udeladt: de udgiver ingen prognosetabel,
-          kun prosatekst (og er i øvrigt en del af Nykredit-koncernen).</li>
+        <li><strong>Nordea:</strong> F1/F3/F5, 4 % obligationslån (effektiv rente), CITA6/CIBOR3/CIBOR6 uden
+          tillæg. Historik fra 2019. Hertil auktionsprognoserne på nordea.com (3 stk/år).</li>
+        <li><strong>Sydbank:</strong> F-kort/F3/F5, Cita3M/Cibor3M samt 10-årig stat og 30-årig
+          realkreditrente. Historik fra 2011 via den ældre renteforventningsside, suppleret med
+          ”Økonomisk Oversigt”-PDF'er (2020–2022), månedlige renteforventnings-PDF'er (2022–) og
+          kvartalsvise refinansieringsartikler.</li>
+        <li><strong>Jyske Bank:</strong> Rentetilpasning F1/F3/F5 <em>ekskl. kursfradrag</em>, hvilket
+          svarer til ca. +0,3/+0,2/+0,2 pp på selve renteniveauet — fejlene er upåvirkede, fordi både
+          prognose og facit er ekskl. fradrag. Historik fra 2024; arkivet har ingen ældre prognosetabel.
+          ’Fast 30 år’ er en flad kupon og indgår ikke i rangeringen.</li>
+        <li><strong>Realkredit Danmark:</strong> FlexLån F1/F3/F5 som intervaller — fejl måles mod
+          intervallets midtpunkt, og hit-rate viser hvor ofte facit ramte intervallet. Historik fra 2012.
+          RD's FlexLån-facit publiceres kun 1. januar og 1. april, så der interpoleres lineært mellem
+          observationerne.</li>
+        <li><strong>Sparekassen Kronjylland:</strong> Cita3, F-kort, F1/F3/F5 og fast 30-årig.
+          Historik fra 2017 via Investeringsmagasinets renteprognosetabel samt den nuværende side.</li>
+        <li><strong>Totalkredit</strong> er udeladt: de udgiver ingen prognosetabel, kun prosatekst.</li>
       </ul>
-      <p>
-        Flere arkiverede optagelser af <em>samme</em> prognose (Wayback tager tit
-        gentagne snapshots) tælles kun én gang – ellers ville fx en side, der blev
-        arkiveret 96 gange i 2019, veje 96 gange tungere end en enkelt optagelse.
-      </p>
-      <p>
-        Bankerne har forskellig historiklængde (og dermed forskellig eksponering
-        mod fx rentestødet i 2022). Periode og antal prognoser fremgår af tabellerne –
-        sammenlign med det in mente. Skam-skammelen øverst rangerer efter middel
-        absolut fejl (MAE) på <em>alle</em> bankens prognoser med facit, mens
-        mesterskabet kun sammenligner på fælles discipliner. Med periode-vælgeren
-        øverst kan hele siden – grafer, skammel, mesterskab og tabeller –
-        begrænses til prognoser spået inden for fx det seneste år eller den
-        overlappende periode (fra den yngste banks første prognose med facit),
-        så bankerne sammenlignes på samme tidshorisont.
-      </p>
+
+      <h3>Forbehold</h3>
+      <ul>
+        <li>Produktsortimentet har ændret sig over tid: CITA-rækkerne og F-kort kom til senere, og
+          kuponen på de faste lån er skiftet (fx 3 % → 4 %). Det fremgår af rådataene.</li>
+        <li>Arkiveringen er ikke komplet — der mangler perioder, og to huller er kendte: Jyske Bank før
+          juni 2024 og Sparekassen Kronjylland februar 2020 til november 2022.</li>
+        <li>Bankerne har forskellig historiklængde og har dermed været udsat for forskellige renteforhold.
+          Sammenlign rangeringen med det in mente.</li>
+        <li>Dette er et uafhængigt hobbyprojekt uden tilknytning til nogen af bankerne. Intet her er
+          investerings- eller lånerådgivning.</li>
+      </ul>
+
       <h3>Hent dataene</h3>
-      <p>
-        Alle tal på siden kan hentes frit – byg gerne videre på dem:
-      </p>
+      <p>Alle tal på siden kan hentes frit — byg gerne videre på dem:</p>
       <p class="downloads">
         <button id="dl-csv" type="button">Download CSV (alle prognoser + facit)</button>
         <a id="dl-json" href="data/dataset.json" download>dataset.json</a>
@@ -354,8 +376,8 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <p>Renteprognose-tjekket – et uafhængigt projekt. Data: Nykredit + Internet Archive.
-       Intet på siden er rådgivning.</p>
+    <p>Renteprognose-tjekket · et uafhængigt projekt · data fra bankernes egne sider og Internet Archive ·
+      intet på siden er rådgivning.</p>
   </div>
 </footer>
 

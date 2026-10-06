@@ -41,7 +41,7 @@
       var area = chart.chartArea;
       var ctx = chart.ctx;
       ctx.save();
-      ctx.strokeStyle = "rgba(90,100,120,.55)";
+      ctx.strokeStyle = "rgba(74,82,92,.6)";
       ctx.setLineDash([5, 4]);
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -49,21 +49,27 @@
       ctx.lineTo(px, area.bottom);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(90,100,120,.9)";
+      ctx.fillStyle = "rgba(74,82,92,.95)";
       ctx.font = "11px sans-serif";
       ctx.fillText("i dag", px + 5, area.top + 12);
       ctx.restore();
     }
   };
 
+  /* På smalle skærme overlapper datoetiketterne, så vi viser færre. */
+  function tickLimit() {
+    var w = (typeof window !== "undefined" && window.innerWidth) || 1200;
+    return w <= 620 ? 4 : w <= 900 ? 6 : 9;
+  }
+
   function xScale(extra) {
     return Object.assign({
       type: "linear",
       ticks: {
-        maxTicksLimit: 9,
+        maxTicksLimit: tickLimit(),
         callback: function (v) { return fmtDate(v); }
       },
-      grid: { color: "rgba(20,40,80,.07)" }
+      grid: { color: "rgba(18,22,27,.08)" }
     }, extra || {});
   }
 
@@ -218,9 +224,9 @@
       return {
         label: "Prognose " + fmtDate(parseDate(v.pub)),
         data: pts,
-        borderColor: "rgba(31,95,168,.35)",
-        backgroundColor: "rgba(31,95,168,.35)",
-        borderWidth: 1.5,
+        borderColor: "rgba(18,58,99,.30)",
+        backgroundColor: "rgba(18,58,99,.30)",
+        borderWidth: 1.2,
         pointRadius: 0,
         pointHoverRadius: 4,
         tension: 0
@@ -233,9 +239,9 @@
     datasets.push({
       label: "Facit (faktisk rente)",
       data: actual,
-      borderColor: "#141414",
-      backgroundColor: "#141414",
-      borderWidth: 3,
+      borderColor: "#12161B",
+      backgroundColor: "#12161B",
+      borderWidth: 2.6,
       pointRadius: 3,
       pointHoverRadius: 5,
       tension: 0.15
@@ -279,7 +285,7 @@
             ticks: { callback: function (v) {
               return (Math.round(v * 100) / 100).toString().replace(".", ",");
             } },
-            grid: { color: "rgba(20,40,80,.07)" }
+            grid: { color: "rgba(18,22,27,.08)" }
           }
         }
       },
@@ -294,7 +300,7 @@
     d.points.forEach(function (pt) {
       if (pt.p !== p || pt.err === null || !inWin(pt.pub)) return;
       pts.push({ x: parseDate(pt.target), y: pt.err, pub: pt.pub, fc: pt.fc, act: pt.act });
-      colors.push(pt.err > 0 ? "rgba(192,57,43,.75)" : pt.err < 0 ? "rgba(30,125,70,.75)" : "rgba(120,120,120,.75)");
+      colors.push(pt.err > 0 ? "rgba(192,57,43,.78)" : pt.err < 0 ? "rgba(30,125,70,.78)" : "rgba(122,131,142,.75)");
     });
     if (!pts.length) { setEmpty("error", true); return; }
     setEmpty("error", false);
@@ -313,7 +319,7 @@
     var zero = {
       label: "nul",
       data: [{ x: exMin, y: 0 }, { x: exMax, y: 0 }],
-      borderColor: "rgba(0,0,0,.5)", borderWidth: 1.5, pointRadius: 0,
+      borderColor: "rgba(18,22,27,.55)", borderWidth: 1.4, pointRadius: 0,
       borderDash: [6, 4]
     };
     var ctx = document.getElementById("chart-error");
@@ -353,7 +359,7 @@
             max: yMax,
             title: { display: true, text: "Fejl i procentpoint" },
             ticks: { callback: fmtTick },
-            grid: { color: "rgba(20,40,80,.07)" }
+            grid: { color: "rgba(18,22,27,.08)" }
           }
         }
       }
@@ -385,7 +391,7 @@
           label: "Gns. fejl (pp)",
           data: vals,
           backgroundColor: vals.map(function (v) {
-            return v >= 0 ? "rgba(192,57,43,.8)" : "rgba(30,125,70,.8)";
+            return v >= 0 ? "rgba(192,57,43,.85)" : "rgba(30,125,70,.85)";
           })
         }]
       },
@@ -410,7 +416,7 @@
               var s = (Math.round(v * 100) / 100).toString().replace(".", ",");
               return (v > 0 ? "+" : "") + s;
             } },
-            grid: { color: "rgba(20,40,80,.07)" }
+            grid: { color: "rgba(18,22,27,.08)" }
           },
           x: { grid: { display: false } }
         }
@@ -776,7 +782,7 @@
             min: ys.length ? niceFloor(Math.min.apply(null, ys.concat([0])) - 0.25) : -1,
             max: ys.length ? niceCeil(Math.max.apply(null, ys.concat([0])) + 0.25) : 1,
             title: { display: true, text: "Fejl i procentpoint" },
-            grid: { color: "rgba(20,40,80,.07)" }
+            grid: { color: "rgba(18,22,27,.08)" }
           }
         }
       }
@@ -847,7 +853,7 @@
         datasets: [{
           label: "Hit-rate",
           data: hs.map(function (h) { return Math.round(rdHitrate[h].hit_rate * 100); }),
-          backgroundColor: "rgba(30,125,70,.8)"
+          backgroundColor: "rgba(18,58,99,.85)"
         }]
       },
       options: {
@@ -866,7 +872,7 @@
         },
         scales: {
           y: { min: 0, max: 100, title: { display: true, text: "% facit i intervallet" },
-               grid: { color: "rgba(20,40,80,.07)" } },
+               grid: { color: "rgba(18,22,27,.08)" } },
           x: { grid: { display: false } }
         }
       }
@@ -993,8 +999,9 @@
       .filter(function (b) { return excluded.indexOf(b) === -1; })
       .sort(function (a, b) { return overall[b].mae - overall[a].mae; })
       .slice(0, 3);
-    var note = "Skammelen måler den rene gennemsnitsfejl (MAE) på alle prognoser " +
-      "med facit (min. " + PODIUM_MIN_N + " stk.). " +
+    var note = "Ranglisten måler den rene gennemsnitsfejl (MAE) på alle prognoser " +
+      "med facit (min. " + PODIUM_MIN_N + " stk.) — altså hvor meget hver bank rammer " +
+      "ved siden af, når man lægger alt sammen. " +
       (excluded.length ? "Endnu ikke med: " +
         excluded.map(function (b) { return cmp.banks[b].label; }).join(", ") + ". " : "") +
       "Den fair disciplin-for-disciplin-sammenligning finder du i mesterskabet længere nede.";
@@ -1009,22 +1016,19 @@
     var box = document.getElementById("podium");
     box.innerHTML = "";
     if (ranked.length < 3) return;
-    var order = [ranked[1], ranked[0], ranked[2]];
-    var cls = ["second", "first", "third"];
-    var maxMae = overall[ranked[0]].mae;
-    order.forEach(function (b, i) {
+    // Ranglisten er sorteret efter MAE; vis den i den rækkefølge, ikke som et
+    // podium (2-1-3), så nummereringen svarer til den viste rangorden.
+    ranked.forEach(function (b, i) {
       var o = overall[b];
       var step = document.createElement("div");
-      step.className = "podium-step " + cls[i];
+      step.className = "podium-step";
       var period = o.period && o.period[0]
         ? fmtDate(parseDate(o.period[0])) + "–" + fmtDate(parseDate(o.period[1])) : "";
       step.innerHTML =
-        "<div class='place'>" + (i === 1 ? "1." : i === 0 ? "2." : "3.") + "</div>" +
+        "<div class='place'>" + (i + 1) + ".</div>" +
         "<div class='bank'>" + cmp.banks[b].label + "</div>" +
         "<div class='mae'>" + o.mae.toFixed(2).replace(".", ",") + " pp</div>" +
-        "<div class='sub'>gns. fejlskud · n=" + o.n + "<br>" + period + "</div>" +
-        "<div class='bar' style='background:" + cmp.banks[b].color +
-        ";width:" + Math.round(o.mae / maxMae * 100) + "%'></div>";
+        "<div class='sub'>middel absolut fejl · n=" + o.n + " · " + period + "</div>";
       step.addEventListener("click", function () { selectBank(b, true); });
       box.appendChild(step);
     });
