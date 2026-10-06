@@ -999,12 +999,13 @@
       .filter(function (b) { return excluded.indexOf(b) === -1; })
       .sort(function (a, b) { return overall[b].mae - overall[a].mae; })
       .slice(0, 3);
-    var note = "Ranglisten måler den rene gennemsnitsfejl (MAE) på alle prognoser " +
-      "med facit (min. " + PODIUM_MIN_N + " stk.) — altså hvor meget hver bank rammer " +
-      "ved siden af, når man lægger alt sammen. " +
+    var note = "Skammelen måler den rene gennemsnitsfejl (MAE) på alle prognoser med facit " +
+      "(min. " + PODIUM_MIN_N + " stk.) — hvor mange procentpoint hver bank i snit rammer " +
+      "ved siden af. " +
       (excluded.length ? "Endnu ikke med: " +
-        excluded.map(function (b) { return cmp.banks[b].label; }).join(", ") + ". " : "") +
-      "Den fair disciplin-for-disciplin-sammenligning finder du i mesterskabet længere nede.";
+        excluded.map(function (b) { return cmp.banks[b].label; }).join(", ") +
+        " — de har for lidt historik til at komme i skammekrogen. " : "") +
+      "Vil du se den fair disciplin-for-disciplin-sammenligning, finder du mesterskabet længere nede.";
     var noteEl = document.getElementById("podium-note");
     noteEl.innerHTML = "";
     noteEl.appendChild(document.createTextNode(note.split("mesterskabet")[0]));
@@ -1016,19 +1017,20 @@
     var box = document.getElementById("podium");
     box.innerHTML = "";
     if (ranked.length < 3) return;
-    // Ranglisten er sorteret efter MAE; vis den i den rækkefølge, ikke som et
-    // podium (2-1-3), så nummereringen svarer til den viste rangorden.
-    ranked.forEach(function (b, i) {
+    // Podium: den mest upræcise (højeste MAE) på toppen, flankeret af nr. 2 og 3.
+    var order = [ranked[1], ranked[0], ranked[2]];
+    var cls = ["second", "first", "third"];
+    order.forEach(function (b, i) {
       var o = overall[b];
       var step = document.createElement("div");
-      step.className = "podium-step";
+      step.className = "podium-step " + cls[i];
       var period = o.period && o.period[0]
         ? fmtDate(parseDate(o.period[0])) + "–" + fmtDate(parseDate(o.period[1])) : "";
       step.innerHTML =
-        "<div class='place'>" + (i + 1) + ".</div>" +
+        "<div class='place'>" + (i === 1 ? "1." : i === 0 ? "2." : "3.") + "</div>" +
         "<div class='bank'>" + cmp.banks[b].label + "</div>" +
         "<div class='mae'>" + o.mae.toFixed(2).replace(".", ",") + " pp</div>" +
-        "<div class='sub'>middel absolut fejl · n=" + o.n + " · " + period + "</div>";
+        "<div class='sub'>middel absolut fejl · n=" + o.n + "<br>" + period + "</div>";
       step.addEventListener("click", function () { selectBank(b, true); });
       box.appendChild(step);
     });
