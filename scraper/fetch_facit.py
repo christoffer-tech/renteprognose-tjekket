@@ -27,11 +27,12 @@ OUT = ROOT / "data" / "banks" / "jyske" / "facit.json"
 
 API = "https://api.statbank.dk/v1/data"
 
-# produktnoegle i datasættet -> TYPE-kode i MPK3
+# produktnoegle i datasættet -> TYPE-kode i MPK3. Kun serier der faktisk indgår
+# i et sammenligneligt produkt hentes; Nationalbankens rente er udeladt, fordi
+# kun Jyske Bank oplyser den.
 CODES = {
     "stat10": "5500701004",   # 10 årig statsobligation
     "cibor3": "6059",         # CIBOR, løbetid 3 måneder
-    "leading_dk": "5500602011",  # Nationalbankens udlånsrente
 }
 
 

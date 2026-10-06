@@ -45,10 +45,24 @@ PRODUCT_LABELS = {
     "stat5": "Stat 5 år",
     "stat30": "Stat 30 år",
 }
-PRODUCT_ORDER = ["cita3", "cita6", "cibor3", "cibor6", "fkort", "f1", "f3",
-                 "f5", "fast20", "fast30", "fast30kupon", "stat10", "frihed",
-                 # Jyske Markets' markedsrenter (egen serie, 2019-2024)
-                 "leading_dk", "stat2", "stat5", "stat30"]
+# Kun produkter der kan sammenlignes på tværs af banker kommer i datasættet.
+# Kriteriet er ikke bare at flere banker *nævner* produktet, men at mindst to
+# banker har nok evaluerede prognoser til at danne en sammenligning. Ellers får
+# den enkelte banks produktliste lov at pege i sin egen retning.
+#
+#   fast30kupon, frihed, leading_dk, stat2, stat5, stat30
+#       -> oplyses kun af Jyske Bank
+#   fast20
+#       -> oplyses af Nykredit og Sydbank, men Sydbank har kun 1 prognose med
+#          facit (mod Nykredits 100), så der kan ikke dannes celler
+#
+# De rå snapshots indeholder dem stadig, så et produkt kan komme ind igen ved
+# at flytte nøglen tilbage — uden at hente noget forfra.
+EXCLUDED_PRODUCTS = ["fast30kupon", "frihed", "leading_dk", "stat2", "stat5",
+                     "stat30", "fast20"]
+
+PRODUCT_ORDER = ["cibor3", "cibor6", "cita3", "cita6", "f1", "f3", "f5",
+                 "fast30", "fkort", "stat10"]
 
 HORIZONS = ["3M", "6M", "9M", "12M"]
 MAX_FACIT_GAP_DAYS = 60
@@ -340,7 +354,8 @@ def build_bank(bank: str) -> dict:
             "first_pub": min(s["pub_date"] for s in snaps),
             "last_pub": max(s["pub_date"] for s in snaps),
         },
-        "labels": PRODUCT_LABELS,
+        "labels": {p: PRODUCT_LABELS[p] for p in PRODUCT_ORDER
+                   if p in PRODUCT_LABELS},
         "order": [p for p in PRODUCT_ORDER if any(x["p"] == p for x in points)],
         "actuals": {p: [[d, v] for d, v in facit[p]] for p in PRODUCT_ORDER},
         "anchors": anchors,

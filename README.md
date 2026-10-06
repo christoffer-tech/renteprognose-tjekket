@@ -17,7 +17,7 @@ Siden er statisk (HTML/CSS/JS + Chart.js) og hostes gratis på
 - Historie: 41 snapshots, 848 prognoser, 653 med facit (Nykredit fra 2019-07-23)
 - Største fejlskud: Fast 30 år, jan. 2022 → okt. 2022 (spået 1,74 %, facit 5,52 %)
 
-Samlet for alle seks banker: 4 602 prognoser, 3 437 med facit, spredt fra 2011
+Samlet for alle seks banker: 3 740 prognoser, 2 766 med facit, spredt fra 2011
 til i dag.
 
 Tallene tæller **én prognose én gang**. Bankerne genudgiver jævnligt samme
@@ -81,11 +81,11 @@ Backfill via Wayback (`--since`, default 2015). Bankernes `ALT_URLS` dækker
 | Bank | Første prognose | Snapshots | Unikke prognoser | Kilder |
 |---|---|---|---|---|
 | Realkredit Danmark | 2012-01-21 | 68 | 684 | gammel SharePoint-side (2012–2021) + nuværende side + erhvervsspejl |
-| Sydbank | 2011-07-10 | 40 | 375 | gammel renteforventningsside (2011–2019) + nuværende renteside + "Økonomisk Oversigt"-PDF'er (2020–2022, `backfill_sydbank_oversigt.py`) + månedlige renteforventnings-PDF'er (2022–) + refinansieringsartikler |
+| Sydbank | 2011-07-10 | 40 | 384 | gammel renteforventningsside (2011–2019) + nuværende renteside + "Økonomisk Oversigt"-PDF'er (2020–2022, `backfill_sydbank_oversigt.py`) + månedlige renteforventnings-PDF'er (2022–) + refinansieringsartikler |
 | Nordea | 2019-05-16 | 45 | 1 044 | hovedtabel + auktionsprognoser (nordea.com, 3 stk/år) |
-| Nykredit | 2019-07-23 | 41 | 848 | 3 ældre captures (2018–2019) har intet parsebart bord |
+| Nykredit | 2019-07-23 | 41 | 720 | 3 ældre captures (2018–2019) har intet parsebart bord |
 | Sparekassen Kronjylland | 2017-07-14 | 28 | 300 | Investeringsmagasinets `RENTEPROGNOSE`-tabel (2017–2019, `backfill_sparkron_pdf.py`) + nuværende renteside + spejlesiderne `/da/`, lommepenge, kron (alle captures, `--full`) |
-| Jyske Bank | 2019-09-02 | 47 | 1 333 | kvartalsnotatet "Boliglånsanbefaling" + **markedsrente-prognoserne i "Renteprognose"** (2019–2026, `backfill_jyske_renteprognose.py`) med facit fra Danmarks Statistik (`fetch_facit.py`) og bankens egne Spot-kolonner + den nuværende HTML-side |
+| Jyske Bank | 2019-09-02 | 47 | 608 | kvartalsnotatet "Boliglånsanbefaling" + **markedsrente-prognoserne i "Renteprognose"** (2019–2026, `backfill_jyske_renteprognose.py`) med facit fra Danmarks Statistik (`fetch_facit.py`) og bankens egne Spot-kolonner + den nuværende HTML-side |
 
 "Snapshots" er antallet af optagelser der overlever dublet-fjernelsen, og
 "unikke prognoser" er antallet af (produkt, publiceringsdato, måldato)-punkter
@@ -107,12 +107,12 @@ Bankens **markedsrenteprognoser** ligger i et helt andet notat: det månedlige
 | Produkt | Med facit | MAE |
 |---|---|---|
 | `stat10` (10-årig statsobligation) | 171/180 | 0,73 |
-| `leading_dk` (Nationalbankens rente) | 161/170 | 0,82 |
-| `stat2` | 136/175 | 0,66 |
-| `stat5` | 140/180 | 0,59 |
-| `stat30` | 113/160 | 0,53 |
 | `cibor3` | 131/170 | 0,47 |
 | `cibor6` | 104/150 | 0,67 |
+| `f1` / `f3` / `f5` (fra Boliglånsanbefaling) | 20/36 hver | 0,43 / 0,38 / 0,34 |
+
+`stat2`, `stat5`, `stat30` og `leading_dk` er parset og ligger i de rå
+snapshots, men udgår af datasættet — se afsnittet om sammenlignelighed nedenfor.
 
 Facit kommer fra to kilder der supplerer hinanden:
 
@@ -152,6 +152,33 @@ spår kun om én løbetid pr. marked (10-årig swap/stat), og i Q1 2024-notatet
 ligger F5-forventningen på 2,47–2,58 % — på niveau med eller under den 10-årige
 swap. Forskellen er ikke et spread, men hele rentekurvens hældning, som banken
 ikke spår om.
+
+## Kun sammenlignelige produkter
+
+Datasættet indeholder **kun produkter som mindst to banker kan måles på**. Ellers
+peger den enkelte banks produktliste i sin egen retning, og tallene kan ikke
+stilles op mod hinanden.
+
+Kriteriet er ikke bare at flere banker *nævner* produktet, men at mindst to
+banker har mindst tre evaluerede prognoser, så der faktisk kan dannes en celle.
+`scraper/validate.py` håndhæver det: hvis et produkt ender med under to
+dækkede banker, fejler gaten med en besked om hvilke banker der mangler.
+
+Følgende er derfor holdt ude af datasættet (`EXCLUDED_PRODUCTS` i `build.py`),
+men ligger stadig i de rå snapshots og kan flyttes tilbage uden at hente noget
+forfra:
+
+| Produkt | Grund |
+|---|---|
+| `fast30kupon`, `frihed`, `leading_dk`, `stat2`, `stat5`, `stat30` | oplyses kun af Jyske Bank |
+| `fast20` | oplyses af Nykredit og Sydbank, men Sydbank har 1 prognose med facit mod Nykredits 100 |
+
+Til gengæld blev `cita6` koblet på sammenligningen. Produktet var oplyst af
+både Nykredit og Nordea, men havde aldrig været mappet, så det lå ubrugt hen.
+
+Resultatet er ti kanoniske produkter — F1, F3, F5, F-kort, CITA3, CITA6, CIBOR3,
+CIBOR6, Fast 30 år og 10-årig statsrente — hvor hver enkelt bank kun viser
+produkter, som mindst én anden bank også oplyser.
 
 For Sparekassen Kronjylland gik historikken fra 2022-11-11 tilbage til
 **2017-07-14** via Investeringsmagasinets renteprognosetabel (se

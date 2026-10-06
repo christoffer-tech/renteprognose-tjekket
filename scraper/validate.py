@@ -146,6 +146,31 @@ def check_comparison() -> None:
           f"{len(c.get('championship') or [])} banker i mesterskabet")
 
 
+
+# Et produkt skal kunne sammenlignes på tværs af banker. Ellers hører det ikke
+# i datasættet: så peger den enkelte banks produktliste i sin egen retning.
+MIN_COMPARABLE_BANKS = 2
+MIN_POINTS_PER_BANK = 3      # samme graense som compare.MIN_N_PER_CELL
+
+
+def check_comparable(datasets: dict) -> None:
+    """Hvert produkt skal være evalueret af mindst to banker."""
+    per_product: dict[str, list[tuple[str, int]]] = {}
+    for bank, d in datasets.items():
+        for p in d["order"]:
+            m = d["metrics"][p].get("alle")
+            n = m["n"] if m else 0
+            per_product.setdefault(p, []).append((bank, n))
+
+    for p, rows in sorted(per_product.items()):
+        usable = [(b, n) for b, n in rows if n >= MIN_POINTS_PER_BANK]
+        if len(usable) < MIN_COMPARABLE_BANKS:
+            detail = ", ".join(f"{b}={n}" for b, n in sorted(rows))
+            failures.append(
+                f"produkt '{p}' kan ikke sammenlignes: kun {len(usable)} bank(er) "
+                f"med >= {MIN_POINTS_PER_BANK} evaluerede prognoser ({detail})")
+
+
 def main() -> int:
     print("Validerer datasæt ...")
     datasets = {}
@@ -154,6 +179,7 @@ def main() -> int:
         if d:
             datasets[bank] = d
     check_comparison()
+    check_comparable(datasets)
 
     print()
     print("Metrics pr. bank (alle produkter og horisonter):")

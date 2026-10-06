@@ -57,7 +57,7 @@ BANK_COLORS = {
 # bank-produkt -> kanonisk sammenligningsprodukt
 CANONICAL_MAP = {
     "nykredit": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT",
-                 "cita3": "CITA3", "fast30": "FAST30"},
+                 "cita3": "CITA3", "cita6": "CITA6", "fast30": "FAST30"},
     "nordea": {"f1": "F1", "f3": "F3", "f5": "F5", "cita6": "CITA6",
                "cibor3": "CIBOR3", "cibor6": "CIBOR6", "fast30": "FAST30"},
     "sydbank": {"f1": "F1", "f3": "F3", "f5": "F5", "fkort": "FKORT", "cita3": "CITA3",
