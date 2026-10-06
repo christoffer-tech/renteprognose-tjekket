@@ -17,7 +17,7 @@ Siden er statisk (HTML/CSS/JS + Chart.js) og hostes gratis på
 - Historie: 41 snapshots, 848 prognoser, 653 med facit (Nykredit fra 2019-07-23)
 - Største fejlskud: Fast 30 år, jan. 2022 → okt. 2022 (spået 1,74 %, facit 5,52 %)
 
-Samlet for alle seks banker: 3 383 prognoser, 2 469 med facit, spredt fra 2011
+Samlet for alle seks banker: 3 417 prognoser, 2 481 med facit, spredt fra 2011
 til i dag.
 
 Tallene tæller **én prognose én gang**. Bankerne genudgiver jævnligt samme
@@ -32,7 +32,7 @@ veje tungest. Se "Dubletter" under Metode.
 |---|---|
 | `index.html`, `css/`, `js/` | Den statiske hjemmeside (dansk UI) |
 | `scraper/scrape.py` | Orkestrering: live-scrape + Wayback-backfill pr. bank |
-| `scraper/banks/*.py` | Parser-plugins pr. bank (nykredit, nordea, sydbank, jyske, rd) + ekstraserier: `sydbank_pdf` (månedlige renteforventnings-PDF'er), `nordea_auktion` (auktionsprognoser), `sydbank_refin` (refinansieringsartikler), `sparkron_pdf` (Investeringsmagasinets renteprognosetabel 2017-2019), `sydbank_oversigt` (Økonomisk Oversigt 2020-2022) |
+| `scraper/banks/*.py` | Parser-plugins pr. bank (nykredit, nordea, sydbank, jyske, rd) + ekstraserier: `sydbank_pdf` (månedlige renteforventnings-PDF'er), `nordea_auktion` (auktionsprognoser), `sydbank_refin` (refinansieringsartikler), `sparkron_pdf` (Investeringsmagasinets renteprognosetabel 2017-2019), `sydbank_oversigt` (Økonomisk Oversigt 2020-2022), `jyske_pdf` (Boliglånsanbefalingens prognosetabel) |
 | `scraper/common.py` | Fælles HTTP/parse/snapshot-hjælpere |
 | `scraper/build.py` | Prognoser vs. facit pr. bank → `data/dataset.json` + `data/banks/*/dataset.json` |
 | `scraper/compare.py` | Fællesmængde-rangering → `data/comparison.json` (mesterskab m.m.) |
@@ -85,7 +85,7 @@ Backfill via Wayback (`--since`, default 2015). Bankernes `ALT_URLS` dækker
 | Nordea | 2019-05-16 | 45 | 1 044 | hovedtabel + auktionsprognoser (nordea.com, 3 stk/år) |
 | Nykredit | 2019-07-23 | 41 | 848 | 3 ældre captures (2018–2019) har intet parsebart bord |
 | Sparekassen Kronjylland | 2017-07-14 | 28 | 300 | Investeringsmagasinets `RENTEPROGNOSE`-tabel (2017–2019, `backfill_sparkron_pdf.py`) + nuværende renteside + spejlesiderne `/da/`, lommepenge, kron (alle captures, `--full`) |
-| Jyske Bank | 2024-06-18 | 8 | 132 | første capture (2024-02) uden prognosetabel |
+| Jyske Bank | 2024-01-04 | 9 | 148 | kvartalsnotatet "Boliglånsanbefaling" (Q1 2024 fra arkivet + ugentligt snapshot af den stabile PDF-URL) + den nuværende HTML-side |
 
 "Snapshots" er antallet af optagelser der overlever dublet-fjernelsen, og
 "unikke prognoser" er antallet af (produkt, publiceringsdato, måldato)-punkter
@@ -93,22 +93,29 @@ i `dataset.json`. De rå filer i `data/**/snapshots/` er flere: fx ligger der
 183 RD-filer, hvoraf langt de fleste er genarkiveringer af en uændret side.
 `python scraper/validate_banks.py` viser fordelingen.
 
-Jyske Bank er det største hul: Wayback har kun 8 optagelser af boligsiden
-(første med tabel juni 2024). Jyske Realkredit udgiver ellers et kvartalsnotat,
-"Boliglånsanbefaling", med en tabel "Forventninger til realkreditrenten"
-(F1/F3/F5/fast 30 år på faste måldatoer) — formatet er verificeret og
-parsebart, men **kilden er ikke tilgængelig**: de gamle
-`/wps/wcm/connect/jfo/<uuid>/...pdf`-URL'er afvises af Jyskes WAF, Wayback har
-mistet WARC-indholdet (CDX rapporterer stadig HTTP 200), og den stabile
-`/pdf/qqcnz2ut/boliglaansanbefaling.pdf` giver i dag en *generel* anbefaling
-uden tabel. Der er altså ingen aktiv Jyske-PDF-parser i repoet; den blev
-skrevet, verificeret mod Q1 2024-udgaven (5 måldatoer × F1/F3/F5 = 15 nye
-punkter) og fjernet igen, fordi kilden ikke kunne hentes. Skal den genoptages,
-er tabellen i PDF'en på formen "Forventninger til realkreditrenten" med
-kolonnerne F1/F3/F5/fast 30 år og rækker på formen `03-01-2024`, og
-kolonnemappingen bør ske på x-koordinater (overskrifterne er skrevet over to
-linjer). Jyske Markets' månedlige renteprognose-PDF'er dækker kun
-makro-/swaprenter, ikke F1/F3/F5-boligrenter, og er derfor ikke taget med.
+Jyske Bank er fortsat det største hul, og årsagen er nu efterprøvet præcist:
+**Jyskes prognosetabel findes kun som maskinlæsbar tekst i ét eneste bevaret
+notat.** Kvartalsnotatet "Boliglånsanbefaling" indeholder tabellen
+*"Forventninger til realkreditrenten"* (F1/F3/F5/fast 30 år på eksplicitte
+måldatoer), og Q1 2024-udgaven er hentet fra Wayback — den giver 16 nye punkter,
+hvoraf 12 med facit, og flytter bankens første prognose fra 2024-06-18 til
+**2024-01-04**. Den stabile `/pdf/qqcnz2ut/boliglaansanbefaling.pdf` hentes
+ugentligt, så serien vokser med én post pr. kvartal.
+
+Alt andet Jyske-materiale er afprøvet og kan ikke bruges:
+
+- **"Renteprognose" (Jyske Markets, månedligt 2018–2024)** indeholder kun
+  markedsrenter — `DKK SWAP 10y`, `EUR SWAP 10y`, `USD STAT 10y` — ikke
+  F1/F3/F5, og tallene ligger i grafer. PDF'erne er ellers live og hentbare.
+- **CDX-indekset viser 22 relevante kvartals-PDF'er**, men kun **1 af 22** kan
+  faktisk afspilles; resten svarer 404 selv om indekset melder HTTP 200. De
+  gamle `/wps/wcm/connect/jfo/<uuid>/`-URL'er svarer 403/404, og `/pdf/wcm/`
+  kender ikke de gamle UUID'er.
+- **Den nuværende `forventning-til-rentetilpasning.pdf`** er den kvartalsvise
+  prognose, men tallene ligger i en figur (F1 2,28 → 2,98 læst med øjet), ikke
+  i en tabel.
+- **`resultat-rentetilpasning-privat.pdf`** har derimod en maskinlæsbar tabel
+  med F1/F3/F5-kontantlånsrenter — men det er *facit*, ikke en prognose.
 
 For Sparekassen Kronjylland gik historikken fra 2022-11-11 tilbage til
 **2017-07-14** via Investeringsmagasinets renteprognosetabel (se
@@ -153,6 +160,7 @@ python scraper/scrape.py backfill nordea --since 2012   # dybere historik for é
 python scraper/scrape.py backfill sparkron --full       # ALLE captures (uden digest-collapse)
 python scraper/backfill_sparkron_pdf.py  # Sparkrons renteprognoser fra Investeringsmagasinet (2017-2019)
 python scraper/backfill_sydbank_oversigt.py  # Sydbanks Økonomisk Oversigt (2020-2022)
+python scraper/backfill_jyske_pdf.py     # Jyskes Boliglånsanbefaling (arkiv + nyeste udgave)
 python scraper/backfill_sydbank_pdf.py   # Sydbanks månedlige renteforventnings-PDF'er
 python scraper/backfill_nordea_auktion.py  # Nordeas auktionsprognoser (via sitemap)
 python scraper/backfill_sydbank_refin.py   # Sydbanks refinansieringsartikler (live + Wayback)

@@ -22,7 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from banks import jyske, nordea, nykredit, rd, sparkron, sydbank
-from banks import nordea_auktion, sydbank_pdf, sydbank_refin
+from banks import jyske_pdf, nordea_auktion, sydbank_pdf, sydbank_refin
 from common import (BROWSER_HEADERS, ROOT, fetch, list_captures,
                     snapshot_fingerprint, wayback_url)
 
@@ -149,6 +149,35 @@ def cmd_update_extra(bank_id: str, sydbank_html: str | None = None) -> None:
                 _save_if_new("sydbank", snap, f"refin-live-{stamp}.json")
         except Exception as e:
             print(f"[sydbank] refin-update sprunget over ({e})", flush=True)
+
+    if bank_id == "jyske":
+        # Kvartalsnotatet "Boliglånsanbefaling" har tabellen "Forventninger til
+        # realkreditrenten" (F1/F3/F5/fast 30 år). Den stabile URL giver den
+        # nyeste udgave, saa serien vokser med én post pr. kvartal. Nogle
+        # kvartaler udgiver i stedet en generel anbefaling uden tabel - saa
+        # springer vi bare over.
+        # Nogle kvartaler udgiver en generel anbefaling uden prognosetabel.
+        # Vi vil ikke hente den store PDF forgaeves hver uge, saa vi noterer
+        # hvornaar vi sidst har set efter, og proever igen efter en uge.
+        marker = snap_dir("jyske") / "bl-last-checked.txt"
+        try:
+            if marker.exists():
+                last = marker.read_text(encoding="utf-8").strip()
+                age = (dt.date.today() - dt.date.fromisoformat(last)).days
+                if age < 7:
+                    print(f"[jyske] notatet tjekket for {age} dag(e) siden - "
+                          f"springer over", flush=True)
+                    return
+            snap = jyske_pdf.fetch_and_parse(jyske_pdf.LIVE_URL, source="live-pdf",
+                                             capture_ts=None, fallback_date=today)
+            marker.write_text(today, encoding="utf-8")
+            if snap is None:
+                print("[jyske] notatet har ingen prognosetabel i denne udgave",
+                      flush=True)
+            else:
+                _save_if_new("jyske", snap, f"bl-live-{stamp}.json")
+        except Exception as e:
+            print(f"[jyske] PDF-update sprunget over ({e})", flush=True)
 
     if bank_id == "nordea":
         # auktions-prognoser (3 stk/aar) via sitemap-discovery
