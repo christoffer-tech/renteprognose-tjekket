@@ -38,19 +38,26 @@ PRODUCT_LABELS = {
     "fast30kupon": "Fast 30 år (kupon)",
     "stat10": "10-årig statsrente",
     "frihed": "Jyske Frihed",
-    # Jyske Markets' "Renteprognose": markedsrenter (2019-2024). Holdt adskilt
-    # fra bankens boligrenter, som har et andet spread.
+    # Jyske Markets' "Renteprognose": markedsrenter (2017-2026). Holdt adskilt
+    # fra bankens boligrenter, som har et andet spread. Swapkurven ligger klar
+    # i snapshots og kan flyttes til PRODUCT_ORDER - men den oplyses kun af
+    # Jyske, saa den kan ikke danne celler i mesterskabet.
     "leading_dk": "Nationalbankens rente",
     "stat2": "Stat 2 år",
     "stat5": "Stat 5 år",
     "stat30": "Stat 30 år",
+    "swap2": "Swap 2 år",
+    "swap5": "Swap 5 år",
+    "swap10": "Swap 10 år",
+    "swap30": "Swap 30 år",
 }
 # Kun produkter der kan sammenlignes på tværs af banker kommer i datasættet.
 # Kriteriet er ikke bare at flere banker *nævner* produktet, men at mindst to
 # banker har nok evaluerede prognoser til at danne en sammenligning. Ellers får
 # den enkelte banks produktliste lov at pege i sin egen retning.
 #
-#   fast30kupon, frihed, leading_dk, stat2, stat5, stat30
+#   fast30kupon, frihed, leading_dk, stat2, stat5, stat30, swap2, swap5,
+#   swap10, swap30
 #       -> oplyses kun af Jyske Bank
 #   fast20
 #       -> oplyses af Nykredit og Sydbank, men Sydbank har kun 1 prognose med
@@ -59,7 +66,7 @@ PRODUCT_LABELS = {
 # De rå snapshots indeholder dem stadig, så et produkt kan komme ind igen ved
 # at flytte nøglen tilbage — uden at hente noget forfra.
 EXCLUDED_PRODUCTS = ["fast30kupon", "frihed", "leading_dk", "stat2", "stat5",
-                     "stat30", "fast20"]
+                     "stat30", "fast20", "swap2", "swap5", "swap10", "swap30"]
 
 PRODUCT_ORDER = ["cibor3", "cibor6", "cita3", "cita6", "f1", "f3", "f5",
                  "fast30", "fkort", "stat10"]

@@ -1,0 +1,74 @@
+{
+ "bank": "jyske",
+ "source": "pdf-forventning-rentetilpasning",
+ "capture": "20210117151122",
+ "obs_date": "2020-12-02",
+ "pub_date": "2020-12-02",
+ "recalc_date": null,
+ "targets": [
+  "2021-04-01",
+  "2021-04-01",
+  "2021-04-01"
+ ],
+ "rows": {
+  "f1": {
+   "name": "f1",
+   "aktuelt": null,
+   "forecasts": [
+    0.04
+   ],
+   "targets": [
+    "2021-04-01"
+   ]
+  },
+  "f3": {
+   "name": "f3",
+   "aktuelt": null,
+   "forecasts": [
+    -0.31
+   ],
+   "targets": [
+    "2021-04-01"
+   ]
+  },
+  "f5": {
+   "name": "f5",
+   "aktuelt": null,
+   "forecasts": [
+    -0.27
+   ],
+   "targets": [
+    "2021-04-01"
+   ]
+  }
+ },
+ "raw_rows": {
+  "f1": [
+   null,
+   0.04
+  ],
+  "f3": [
+   null,
+   -0.31
+  ],
+  "f5": [
+   null,
+   -0.27
+  ]
+ },
+ "realized": {
+  "f1": [
+   "2020-04-01",
+   -0.29
+  ],
+  "f3": [
+   "2018-04-01",
+   0.14
+  ],
+  "f5": [
+   "2016-04-01",
+   0.91
+  ]
+ },
+ "kind": "boligrenter-graf"
+}

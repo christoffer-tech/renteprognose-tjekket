@@ -111,9 +111,20 @@ def main() -> int:
         return 0
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(series, ensure_ascii=False, indent=1),
+    # Flet i stedet for at overskrive: filen rummer ogsaa facit-serier fra
+    # andre kilder (Jyskes egne refinansieringsrenter for f1/f3/f5, se
+    # backfill_jyske_forventning.py), og de maa ikke forsvinde naar MPK3 hentes.
+    merged: dict[str, list] = {}
+    if OUT.exists():
+        try:
+            merged = json.loads(OUT.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            merged = {}
+    merged.update(series)
+    OUT.write_text(json.dumps(merged, ensure_ascii=False, indent=1),
                    encoding="utf-8")
-    print(f"\nskrev {OUT}")
+    print(f"\nskrev {OUT} "
+          f"({', '.join(f'{k}={len(v)}' for k, v in merged.items())})")
     return 0
 
 

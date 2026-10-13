@@ -85,7 +85,7 @@ Backfill via Wayback (`--since`, default 2015). Bankernes `ALT_URLS` dækker
 | Nordea | 2019-05-16 | 45 | 1 044 | hovedtabel + auktionsprognoser (nordea.com, 3 stk/år) |
 | Nykredit | 2019-07-23 | 41 | 720 | 3 ældre captures (2018–2019) har intet parsebart bord |
 | Sparekassen Kronjylland | 2017-07-14 | 28 | 300 | Investeringsmagasinets `RENTEPROGNOSE`-tabel (2017–2019, `backfill_sparkron_pdf.py`) + nuværende renteside + spejlesiderne `/da/`, lommepenge, kron (alle captures, `--full`) |
-| Jyske Bank | 2019-09-02 | 47 | 608 | kvartalsnotatet "Boliglånsanbefaling" + **markedsrente-prognoserne i "Renteprognose"** (2019–2026, `backfill_jyske_renteprognose.py`) med facit fra Danmarks Statistik (`fetch_facit.py`) og bankens egne Spot-kolonner + den nuværende HTML-side |
+| Jyske Bank | 2017-07-03 | 57 | 717 | kvartalsnotaterne "Boliglånsanbefaling" (2024-, tabel) og "Forventning til rentetilpasning" (2020-2023, grafer) + **markedsrente-prognoserne i "Renteprognose"** (2017-2026, `backfill_jyske_renteprognose.py`) med facit fra Danmarks Statistik (`fetch_facit.py`) og bankens egne Spot-kolonner + den nuværende HTML-side |
 
 "Snapshots" er antallet af optagelser der overlever dublet-fjernelsen, og
 "unikke prognoser" er antallet af (produkt, publiceringsdato, måldato)-punkter
@@ -93,26 +93,68 @@ i `dataset.json`. De rå filer i `data/**/snapshots/` er flere: fx ligger der
 183 RD-filer, hvoraf langt de fleste er genarkiveringer af en uændret side.
 `python scraper/validate_banks.py` viser fordelingen.
 
-Jyske Banks hul er nu **lukket for markedsrenternes vedkommende**. Bankens
-boligrenter (F1/F3/F5) findes kun som maskinlæsbar tabel i kvartalsnotatet
-"Boliglånsanbefaling" — Q1 2024-udgaven er hentet fra arkivet og giver 16
-punkter, hvoraf 12 med facit.
+Jyske Banks hul er nu **lukket for markedsrenternes vedkommende** — og delvist
+for boligrenternes. Bankens boligrenter (F1/F3/F5) findes i to slags notater,
+som hver kraever sin parser:
+
+- **Tabelformat (2024-)**: "Boliglånsanbefaling" med tabellen "Forventninger
+  til realkreditrenten". Laeses af `banks/jyske_pdf.py` (pdfplumber).
+- **Graf-format (2020-2023)**: "Forventning til rentetilpasning pr. 1.
+  <måned>" med én figur pr. produkt, hvor prognosen staar som label over
+  sojlen for den kommende refinansiering (`F1: 2023*`) ved siden af den
+  *realiserede* rente fra den seneste (`F1: 2022`). Laeses af
+  `banks/jyske_anbefaling.py`, som finder kolonnerne paa x-position praecis
+  som tabel-parseren. Notaterne ligger ikke laengere paa jyskebank.dk (404) og
+  hentes derfor fra Wayback via `backfill_jyske_forventning.py`.
+
+Figurens realiserede rente er samme stoerrelse som tabelformatets foerste
+raekke ("Lånerente pr. <dato>"), og backfill'en samler dem i
+`data/banks/jyske/facit.json` **dateret paa refinansieringsdatoen** — ikke paa
+notatets publiceringsdato. Den suppleres af Jyskes egne
+**"Resultat af rentetilpasning pr. 1. <måned>"**-notater, som udsendes efter
+hver auktion og oplyser den kontantlånsrente kunderne faktisk fik pr. produkt
+(laest af `banks/jyske_resultat.py`). De to kilder krydstjekker hinanden: for
+1. januar 2022 oplyser begge F1 = −0,22 %. Auktionsopgoerelserne bruges kun for
+perioden **foer 2024-01-01**; derefter har banken egne observationer fra
+HTML-siden og "Lånerente pr."-raekken, og de staar uaendret.
+
+Det giver:
+
+| Serie | Punkter | Med facit | MAE | Dækning (med facit) |
+|---|---|---|---|---|
+| `f1` | 41 | 23 | 0,40 | 2020-12 → 2026-04 |
+| `f3` | 40 | 21 | 0,40 | 2021-12 → 2026-04 |
+| `f5` | 41 | 22 | 0,35 | 2021-09 → 2026-04 |
+
+`f1` er dermed løftet fra 2,3 til 5,3 aars historik, og `f3`/`f5` fra 2024 til
+2021-2022. De nye punkter er de foerste der viser banken under rentechokket i
+2022: for 1. april 2022 spåede Jyske F3 = −0,16 % og F5 = 0,10 %, mens
+auktionsresultatet blev 0,51 % og 0,81 % (fejl +0,67 og +0,71 pp).
+
+Enkelte maal mangler fortsat facit: 1. april 2021 og 1. januar/april 2023, hvor
+arkivet hverken har et prognosenotat med realiserede labels eller en
+auktionsopgoerelse. `f3` og `f5` har derfor 40-41 prognosepunkter, men kun
+21-22 med facit.
 
 Bankens **markedsrenteprognoser** ligger i et helt andet notat: det månedlige
 "Renteprognose" fra Jyske Markets med tabellerne `STATSRENTER` og
-`SWAPRENTER` (fra 2024 samlet i `STATS- OG SWAPRENTER`). Serien dækker
-**september 2019 – april 2026** og giver 1 185 punkter på `stat10`, `stat2`,
-`stat5`, `stat30`, `cibor3`, `cibor6` og `leading_dk`.
+`SWAPRENTER` (fra 2024 samlet i `STATS- OG SWAPRENTER`). Notatet er hentet
+tilbage til **juli 2017**, og hver udgave oplyser både statsrenterne og **hele
+swapkurven**: `swap2`, `swap5`, `swap10`, `swap30` for Danmark samt de afledte
+hældninger (`SWAP 5y - 2y` osv., som ikke gemmes). Eurozonen og USA ligger
+under samme nøgler med `_eu`/`_us`-suffix. Samme notat indeholder desuden
+"Tabel 1: Jyske Bank Boligrenteprognose" (`rtl1`-`rtl10`, se nedenfor).
 
 | Produkt | Med facit | MAE |
 |---|---|---|
-| `stat10` (10-årig statsobligation) | 171/180 | 0,73 |
-| `cibor3` | 131/170 | 0,47 |
-| `cibor6` | 104/150 | 0,67 |
-| `f1` / `f3` / `f5` (fra Boliglånsanbefaling) | 20/36 hver | 0,43 / 0,38 / 0,34 |
+| `stat10` (10-årig statsobligation) | 200/210 | 0,69 |
+| `cibor3` | 164/205 | 0,42 |
+| `cibor6` | 128/180 | 0,59 |
+| `swap2` / `swap5` / `swap10` / `swap30` (kun i snapshots) | 44/80, 44/80, 44/80, 37/70 | 0,27 / 0,31 / 0,36 / 0,35 |
 
-`stat2`, `stat5`, `stat30` og `leading_dk` er parset og ligger i de rå
-snapshots, men udgår af datasættet — se afsnittet om sammenlignelighed nedenfor.
+`stat2`, `stat5`, `stat30`, `leading_dk` og hele swapkurven er parset og ligger
+i de rå snapshots, men udgår af datasættet — se afsnittet om sammenlignelighed
+nedenfor.
 
 Facit kommer fra to kilder der supplerer hinanden:
 
@@ -147,11 +189,56 @@ prognosetabellerne roteret, og pdfplumbers tekstudtræk blander tegnrækkefølge
 parseren prøver det først og falder tilbage til pdfplumber. CI installerer
 `poppler-utils`.
 
-Det er stadig ikke lykkedes at aflede boligrenterne fra markedsrenterne. Jyske
-spår kun om én løbetid pr. marked (10-årig swap/stat), og i Q1 2024-notatet
-ligger F5-forventningen på 2,47–2,58 % — på niveau med eller under den 10-årige
-swap. Forskellen er ikke et spread, men hele rentekurvens hældning, som banken
-ikke spår om.
+Boligrenterne kan derimod godt kobles til markedsrenterne. Den tidligere
+konklusion her i README ("banken spår kun om én løbetid pr. marked") var et
+artefakt af parseren: `SWAPRENTER`-tabellen har hele kurven — 2y, 5y, 10y og
+30y samt hældningerne imellem — men parseren matchede kun `STAT`-rækker og
+stoppede desuden ved den næste tables kolonneoverskrift, så netop swaprækkerne
+faldt ud.
+
+Målt på de fælles observationer følger F5-kontantrenten `swap5` med et spænd på
+**−0,22 til +0,15 pp** (middel −0,03, spredning 0,10 over ni parringer
+2019–2025; Nykredits F5-facit mod Jyskes Spot-kolonne for swap 5y). Til
+sammenligning ligger de målte prognosefejl på 0,26–0,79 pp, altså en
+størrelsesorden over spændets variation. **SWAP 5y er dermed en brugbar proxy
+for F5-niveauet**, mens SWAP 10y ikke er: forskellen mellem de to løbetider er
+kurvens hældning, ikke et fast spread.
+
+To forbehold: proxyen gælder den *markedsrente* F5-lånet refinansieres til —
+ikke en kundes samlede rente, som også indeholder bidragssats og kursfradrag —
+og spændet er kun målt i perioder med normal markedsfunktion. Under stress
+(bankuroen i marts 2020, april 2025) udvides realkredit-/swapspændet, og netop
+de episoder skriver banken selv om i notaterne.
+
+### Bankens egne boligrenter i samme notat
+
+"Renteprognose" indeholder også **"Tabel 1: Jyske Bank Boligrenteprognose"** med
+bankens renter for rentetilpasningslån — etiketten skifter gennem årene
+(`F1-rente`/`F5-rente` i 2017, `RTL1`-`RTL10` fra 2019). Kolonnerne er `I dag`
+plus en-to refinansieringsdatoer (`Pr. 1. okt` / `Pr. 1.okt` / `Pr 1. ju li`),
+og `_parse_boligrente` gemmer dem under **egne nøgler** `rtl1`, `rtl3`, `rtl5`,
+`rtl10` — ikke under `f1`/`f3`/`f5`:
+
+| Serie | Punkter | Med facit | MAE | Dækning |
+|---|---|---|---|---|
+| `rtl1` | 16 | 10 | 0,19 | 2019-01 → 2022-05 |
+| `rtl3` | 15 | 11 | 0,27 | 2019-06 → 2024-06 |
+| `rtl5` | 19 | 12 | 0,31 | 2019-01 → 2024-06 |
+| `rtl10` | 15 | 11 | 0,29 | 2019-06 → 2024-06 |
+
+De to tabeller måler ikke samme rentebegreb. Ved fælles datoer ligger `rtl5` tæt
+på Nykredits F5-facit (middel +0,04, spredning 0,10, fire parringer), mens
+bankens `f5` fra Boliglånsanbefalingen ligger 0,15 pp højere i middel med en
+spredning på 0,20 og en enkelt afvigelse på 0,53 pp. `rtl5` er altså tættere på
+den fælles F5-definition, men serien **stopper i 2024**, hvor notatet droppede
+tabellen, og den må derfor ikke flettes ind i `f5`: de to serier ville give et
+niveaubrud midt i 2024 og en facit-serie i to forskellige definitioner.
+Februar- og apriludgaven 2025 har slet ingen boligrentetabel.
+
+Bemærk at juninotatet 2019 (11.06.2019) *kun* har boligrentetabellen — det har
+ingen `STATSRENTER`/`SWAPRENTER`, og snapshottet får derfor `kind` =
+`boligrenter`. Det var tidligere det ene notat backfill'en meldte "ingen tabel"
+på.
 
 ## Kun sammenlignelige produkter
 
@@ -170,7 +257,7 @@ forfra:
 
 | Produkt | Grund |
 |---|---|
-| `fast30kupon`, `frihed`, `leading_dk`, `stat2`, `stat5`, `stat30` | oplyses kun af Jyske Bank |
+| `fast30kupon`, `frihed`, `leading_dk`, `stat2`, `stat5`, `stat30`, `swap2`, `swap5`, `swap10`, `swap30` | oplyses kun af Jyske Bank |
 | `fast20` | oplyses af Nykredit og Sydbank, men Sydbank har 1 prognose med facit mod Nykredits 100 |
 
 Til gengæld blev `cita6` koblet på sammenligningen. Produktet var oplyst af
