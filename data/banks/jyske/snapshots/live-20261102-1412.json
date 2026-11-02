@@ -1,0 +1,103 @@
+{
+ "bank": "jyske",
+ "source": "live",
+ "capture": null,
+ "obs_date": "2026-11-02",
+ "pub_date": "2026-10-30",
+ "recalc_date": null,
+ "targets": [
+  "2027-01-30",
+  "2027-04-30",
+  "2027-07-30",
+  "2028-01-30"
+ ],
+ "rows": {
+  "f1": {
+   "name": "Rentetilpasning F1",
+   "aktuelt": 3.1,
+   "forecasts": [
+    2.98,
+    2.93,
+    2.78,
+    2.68
+   ]
+  },
+  "f3": {
+   "name": "Rentetilpasning F3",
+   "aktuelt": 3.36,
+   "forecasts": [
+    3.26,
+    3.19,
+    3.06,
+    2.99
+   ]
+  },
+  "f5": {
+   "name": "Rentetilpasning F5",
+   "aktuelt": 3.5,
+   "forecasts": [
+    3.43,
+    3.33,
+    3.23,
+    3.18
+   ]
+  },
+  "frihed": {
+   "name": "Variabel basisrente Jyske Frihed *",
+   "aktuelt": 2.63,
+   "forecasts": [
+    2.8,
+    2.75,
+    2.75,
+    2.75
+   ]
+  },
+  "fast30kupon": {
+   "name": "Jyske Fast Rente (30 år) *",
+   "aktuelt": 5.0,
+   "forecasts": [
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ]
+  }
+ },
+ "raw_rows": {
+  "f1 (Rentetilpasning F1)": [
+   3.1,
+   2.98,
+   2.93,
+   2.78,
+   2.68
+  ],
+  "f3 (Rentetilpasning F3)": [
+   3.36,
+   3.26,
+   3.19,
+   3.06,
+   2.99
+  ],
+  "f5 (Rentetilpasning F5)": [
+   3.5,
+   3.43,
+   3.33,
+   3.23,
+   3.18
+  ],
+  "frihed (Variabel basisrente Jyske Frihed *)": [
+   2.63,
+   2.8,
+   2.75,
+   2.75,
+   2.75
+  ],
+  "fast30kupon (Jyske Fast Rente (30 år) *)": [
+   5.0,
+   5.0,
+   5.0,
+   5.0,
+   5.0
+  ]
+ }
+}

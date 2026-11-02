@@ -1,0 +1,122 @@
+{
+ "bank": "sydbank",
+ "source": "live",
+ "capture": null,
+ "obs_date": "2026-11-02",
+ "pub_date": "2026-11-02",
+ "recalc_date": null,
+ "targets": [
+  "2027-02-02",
+  "2027-05-02",
+  "2027-11-02"
+ ],
+ "rows": {
+  "stat10": {
+   "name": "10-årig statsobligationsrente",
+   "aktuelt": 3.01,
+   "forecasts": [
+    3.5,
+    3.45,
+    3.35
+   ]
+  },
+  "cibor3": {
+   "name": "Kort rente (Cibor3M)",
+   "aktuelt": 2.59,
+   "forecasts": [
+    3.0,
+    3.2,
+    3.15
+   ]
+  },
+  "cita3": {
+   "name": "Kort rente (Cita3M)",
+   "aktuelt": 2.18,
+   "forecasts": [
+    2.6,
+    2.8,
+    2.75
+   ]
+  },
+  "fkort": {
+   "name": "F-kort realkreditrente",
+   "aktuelt": 2.51,
+   "forecasts": [
+    3.2,
+    3.2,
+    3.15
+   ]
+  },
+  "f3": {
+   "name": "F3 realkreditrente",
+   "aktuelt": 3.28,
+   "forecasts": [
+    3.5,
+    3.3,
+    3.1
+   ]
+  },
+  "f5": {
+   "name": "F5 realkreditrente",
+   "aktuelt": 3.42,
+   "forecasts": [
+    3.7,
+    3.5,
+    3.3
+   ]
+  },
+  "fast30": {
+   "name": "30-årig realkreditrente",
+   "aktuelt": 4.5,
+   "forecasts": [
+    5.2,
+    5.1,
+    0.0
+   ]
+  }
+ },
+ "raw_rows": {
+  "10-årig statsobligationsrente": [
+   3.01,
+   3.5,
+   3.45,
+   3.35
+  ],
+  "Kort rente (Cibor3M)": [
+   2.59,
+   3.0,
+   3.2,
+   3.15
+  ],
+  "Kort rente (Cita3M)": [
+   2.18,
+   2.6,
+   2.8,
+   2.75
+  ],
+  "F-kort realkreditrente": [
+   2.51,
+   3.2,
+   3.2,
+   3.15
+  ],
+  "F3 realkreditrente": [
+   3.28,
+   3.5,
+   3.3,
+   3.1
+  ],
+  "F5 realkreditrente": [
+   3.42,
+   3.7,
+   3.5,
+   3.3
+  ],
+  "30-årig realkreditrente": [
+   4.5,
+   5.2,
+   5.1,
+   0.0
+  ]
+ }
+}
